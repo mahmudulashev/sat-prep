@@ -136,6 +136,8 @@ export type AttemptState =
 
 export type UsageStatus = {
   is_guest: boolean;
+  /** No daily limit and no test lockdown (the site owner). */
+  unlimited?: boolean;
   used: number;
   limit: number;
   remaining: number;

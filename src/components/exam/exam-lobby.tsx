@@ -44,7 +44,7 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
     setError(null);
     setStarting(true);
     const fullscreen = await enterFullscreen();
-    if (!fullscreen && FULLSCREEN_REQUIRED) {
+    if (!fullscreen && FULLSCREEN_REQUIRED && !usage?.unlimited) {
       setStarting(false);
       setError("Your browser blocked full screen. Allow full screen for this site and try again.");
       return;
@@ -71,7 +71,7 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
     }
   }
 
-  if (attempt) return <ExamRunner initial={attempt} studentName={studentName} />;
+  if (attempt) return <ExamRunner initial={attempt} studentName={studentName} unrestricted={Boolean(usage?.unlimited)} />;
 
   return (
     <div className="min-h-screen" data-page-scale="app">
@@ -186,14 +186,16 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold">Tests today</p>
                 <p className="text-sm text-muted">
-                  {usage.used} of {usage.limit} used
+                  {usage.unlimited ? `${usage.used} taken · no limit` : `${usage.used} of ${usage.limit} used`}
                 </p>
               </div>
-              <div className="mt-3 flex gap-1.5">
-                {Array.from({ length: usage.limit }, (_, i) => (
-                  <span key={i} className={cn("h-2 flex-1 rounded-full", i < usage.used ? "bg-brand" : "bg-line")} />
-                ))}
-              </div>
+              {!usage.unlimited && (
+                <div className="mt-3 flex gap-1.5">
+                  {Array.from({ length: usage.limit }, (_, i) => (
+                    <span key={i} className={cn("h-2 flex-1 rounded-full", i < usage.used ? "bg-brand" : "bg-line")} />
+                  ))}
+                </div>
+              )}
               <p className="mt-4 text-sm text-muted">
                 {usage.is_guest ? (
                   <>

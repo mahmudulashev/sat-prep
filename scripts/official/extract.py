@@ -263,6 +263,12 @@ def is_bullet(line: Line) -> bool:
     return line.text.lstrip()[:1] in ("•", "●", "▪", "◦", "-") and len(line.text.strip()) > 2
 
 
+PROMPT_START = re.compile(
+    r"(Which choice|Which finding|Which quotation|Which statement|Which of the following|Based on the text|"
+    r"According to the text|What does the text|As used in the text|The student wants|How would|What is the)"
+)
+
+
 def english_blocks(pieces: list[tuple[fitz.Page, list[Line], list[fitz.Rect]]], scale: float, store: AssetStore):
     """Turns the lines and figures of a Reading and Writing stem into stimulus
     blocks plus the question prompt (the final paragraph). A stem can run over
@@ -282,6 +288,16 @@ def english_blocks(pieces: list[tuple[fitz.Page, list[Line], list[fitz.Rect]]], 
         for fig in figures:
             items.append(((pi, fig.y0), "figure", fig, page))
         items.sort(key=lambda x: x[0])
+
+    # The question sentence normally has its own paragraph; when the spacing
+    # doesn't separate it, split the last paragraph at the line where it starts.
+    if items and items[-1][1] == "para":
+        key, _, group, page = items[-1]
+        for i, line in enumerate(group[1:], 1):
+            if PROMPT_START.match(line.text.strip()):
+                items[-1] = (key, "para", group[:i], page)
+                items.append(((key[0], line.bbox.y0), "para", group[i:], page))
+                break
 
     prompt = ""
     prompt_pos = None
@@ -576,7 +592,7 @@ class BookQuestion:
     wide: bool = False
 
 
-COLUMN_WIDTH = 242.5
+COLUMN_WIDTH = 252.0
 COLUMN_GAP = 278.4
 CONTENT_TOP = 110
 
@@ -649,9 +665,22 @@ def book_questions(n: int) -> list[list[BookQuestion]]:
         for q in mod:
             for seg in q.segments:
                 # The end-of-module "STOP" box is not part of the last question.
-                stop = seg.page.search_for("If you finish before time", clip=seg.rect)
+                stop = [
+                    r
+                    for phrase in ("If you finish before time", "check your work on this module only", "Do not turn to any other module")
+                    for r in seg.page.search_for(phrase, clip=seg.rect)
+                ]
                 if stop:
-                    seg.rect.y1 = max(seg.rect.y0 + 1, min(r.y0 for r in stop) - 14)
+                    # Cut above the whole box: its "STOP" heading sits well above the text.
+                    top = min(r.y0 for r in stop)
+                    # search_for ignores case, so keep only the big "STOP" heading itself.
+                    heading = [
+                        r for r in seg.page.search_for("STOP")
+                        if r.y1 <= top + 2 and top - r.y1 < 80 and "STOP" in seg.page.get_textbox(r + (-1, -1, 1, 1))
+                    ]
+                    box = [d for d in drawings_in(seg.page, seg.rect) if d.y0 < top < d.y1 and d.width > 60 and d.height < 160]
+                    cut = min([top - 14] + [r.y0 - 6 for r in heading] + [d.y0 - 4 for d in box])
+                    seg.rect.y1 = max(seg.rect.y0 + 1, cut)
                 seg.lines = lines_in(seg.page, seg.rect)
                 bar_rect = fitz.Rect(seg.rect.x0, seg.rect.y0 - 14, seg.rect.x1, seg.rect.y0)
                 seg.drawn = drawings_in(seg.page, seg.rect, ignore=[bar_rect])
@@ -788,21 +817,54 @@ def build_book(n: int, store: AssetStore) -> tuple[list[dict], list[dict]]:
                 raise RuntimeError(f"{qid}: Reading and Writing answer {answer!r} is not a letter")
 
             begin = (0, q.segments[0].rect.y0)
-            stem_end = (letters["A"].si, letters["A"].line.bbox.y0 - 2) if is_mcq else end
-            # Each choice spans from its label to the next row of labels below
-            # it, and from its label to the next label on the same row.
+            # Where a row of labels starts. Fractions stick out above and below
+            # their row, so rows are split at the widest empty band between them
+            # rather than at the label's top edge.
+            def row_mid(spot: ChoiceSpot) -> float:
+                return (spot.line.bbox.y0 + spot.line.bbox.y1) / 2
+
+            def cut_between(si: int, y_lo: float, y_hi: float, default: float) -> float:
+                seg = q.segments[si]
+                spans = sorted(
+                    (max(r.y0, y_lo), min(r.y1, y_hi))
+                    for r in [l.bbox for l in seg.lines] + seg.drawn
+                    if r.y1 > y_lo and r.y0 < y_hi and r.height < (y_hi - y_lo)
+                )
+                best, cursor = None, y_lo
+                for a, b in spans:
+                    if a > cursor and (best is None or a - cursor > best[1] - best[0]):
+                        best = (cursor, a)
+                    cursor = max(cursor, b)
+                return (best[0] + best[1]) / 2 if best and best[1] - best[0] >= 1 else default
+
+            stem_end = end
+            if is_mcq:
+                a = letters["A"]
+                stem_end = (a.si, cut_between(a.si, max(q.segments[a.si].rect.y0, a.line.bbox.y0 - 30), row_mid(a), a.line.bbox.y0 - 2))
+            # Each choice spans from the cut above it to the cut above the next
+            # row of labels, and from its label to the next label on the same row.
             choice_ranges = []
             if is_mcq:
+                rows = sorted({(o.si, round(o.line.bbox.y0)) for o in letters.values()})
+                row_top: dict[tuple, tuple[int, float]] = {}
+                for i, row in enumerate(rows):
+                    spot = next(o for o in letters.values() if (o.si, round(o.line.bbox.y0)) == row)
+                    if i == 0:
+                        row_top[row] = stem_end
+                    else:
+                        prev = next(o for o in letters.values() if (o.si, round(o.line.bbox.y0)) == rows[i - 1])
+                        if prev.si == spot.si:
+                            row_top[row] = (spot.si, cut_between(spot.si, row_mid(prev), row_mid(spot), spot.line.bbox.y0 - 2))
+                        else:
+                            row_top[row] = (spot.si, spot.line.bbox.y0 - 2)
                 for L in LETTERS:
                     spot = letters[L]
-                    pos = (spot.si, spot.line.bbox.y0)
-                    below = sorted(
-                        (o.si, o.line.bbox.y0) for o in letters.values() if (o.si, o.line.bbox.y0) > (pos[0], pos[1] + 3)
-                    )
-                    stop = (below[0][0], below[0][1] - 2) if below else end
+                    row = (spot.si, round(spot.line.bbox.y0))
+                    i = rows.index(row)
+                    stop = row_top[rows[i + 1]] if i + 1 < len(rows) else end
                     right = [o.x0 for o in letters.values() if o.si == spot.si and abs(o.line.bbox.y0 - spot.line.bbox.y0) < 3 and o.x0 > spot.x0]
                     x_to = min(right) - 2 if right else None
-                    choice_ranges.append(((spot.si, spot.line.bbox.y0 - 1.5), stop, spot, x_to))
+                    choice_ranges.append((row_top[row], stop, spot, x_to))
 
             record: dict = {"id": qid, "subject": subject, "type": "mcq" if is_mcq else "spr", "explanation": ""}
 

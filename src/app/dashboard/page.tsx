@@ -119,16 +119,25 @@ export default async function DashboardPage() {
           {usage && (
             <div className="rounded-3xl bg-ink p-6 text-white shadow-float">
               <p className="text-sm font-semibold text-white/60">Tests today</p>
-              <p className="mt-1 text-4xl font-extrabold">
-                {usage.remaining}
-                <span className="text-lg font-semibold text-white/50"> of {usage.limit} left</span>
-              </p>
-              <div className="mt-4 flex gap-1.5">
-                {Array.from({ length: usage.limit }, (_, i) => (
-                  <span key={i} className={cn("h-2 flex-1 rounded-full", i < usage.used ? "bg-lime" : "bg-white/15")} />
-                ))}
-              </div>
-              <ButtonLink href="/dashboard/tests" variant="lime" className="mt-5 w-full" aria-disabled={usage.remaining === 0}>
+              {usage.unlimited ? (
+                <p className="mt-1 text-4xl font-extrabold">
+                  {usage.used}
+                  <span className="text-lg font-semibold text-white/50"> taken · no limit</span>
+                </p>
+              ) : (
+                <>
+                  <p className="mt-1 text-4xl font-extrabold">
+                    {usage.remaining}
+                    <span className="text-lg font-semibold text-white/50"> of {usage.limit} left</span>
+                  </p>
+                  <div className="mt-4 flex gap-1.5">
+                    {Array.from({ length: usage.limit }, (_, i) => (
+                      <span key={i} className={cn("h-2 flex-1 rounded-full", i < usage.used ? "bg-lime" : "bg-white/15")} />
+                    ))}
+                  </div>
+                </>
+              )}
+              <ButtonLink href="/dashboard/tests" variant="lime" className="mt-5 w-full" aria-disabled={usage.remaining === 0 && !usage.unlimited}>
                 {usage.remaining ? "Start a test" : "Come back tomorrow"}
               </ButtonLink>
             </div>

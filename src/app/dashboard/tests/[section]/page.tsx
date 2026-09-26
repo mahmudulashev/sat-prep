@@ -41,7 +41,7 @@ export default async function SectionTestsPage({ params }: PageProps<"/dashboard
         </div>
         {usage && (
           <p className="rounded-full bg-surface px-4 py-2 text-sm font-semibold shadow-card ring-1 ring-line">
-            {usage.remaining} of {usage.limit} tests left today
+            {usage.unlimited ? "Unlimited tests" : `${usage.remaining} of ${usage.limit} tests left today`}
           </p>
         )}
       </div>

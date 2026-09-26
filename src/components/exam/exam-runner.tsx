@@ -59,7 +59,16 @@ async function postJson<T>(url: string, body?: unknown): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function ExamRunner({ initial, studentName }: { initial: AttemptPayload; studentName: string }) {
+export function ExamRunner({
+  initial,
+  studentName,
+  unrestricted = false,
+}: {
+  initial: AttemptPayload;
+  studentName: string;
+  /** The site owner's account: no lockdown warnings or automatic submission. */
+  unrestricted?: boolean;
+}) {
   const [attempt, setAttempt] = useState(initial);
   const [view, setView] = useState<View>(initial.break_until ? "break" : "question");
   const [index, setIndex] = useState(0);
@@ -118,7 +127,7 @@ export function ExamRunner({ initial, studentName }: { initial: AttemptPayload; 
 
   const endExamRef = useRef<(reason: string) => void>(() => undefined);
   const lockdown = useLockdown({
-    active,
+    active: active && !unrestricted,
     initial: initial.violations ?? [],
     maxStrikes: MAX_VIOLATIONS,
     onLimitReached: () => endExamRef.current("The test was submitted automatically after repeated integrity warnings."),

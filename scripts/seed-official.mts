@@ -87,3 +87,7 @@ if (missing.length) process.stdout.write("\n");
 
 const result = await rpc<unknown>("seed_content", { p_questions: questions, p_forms: forms });
 console.log("Questions and tests:", result);
+
+// Remove images left over from earlier builds.
+const removed = await rpc<number>("prune_assets", { p_keep: [...sizes.keys()] });
+console.log(`Removed ${removed} unused images.`);
