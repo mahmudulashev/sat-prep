@@ -56,6 +56,14 @@ npm run dev
    npm run seed -- --push
    ```
 
+4. Configure Supabase Auth (Dashboard → Authentication):
+   - **Emails**: Supabase's built-in email service only delivers to your project's team
+     members. For real sign-ups, add a custom SMTP provider (Resend, Postmark, SES…) or
+     turn off *Confirm email* under Sign In / Providers → Email.
+   - **URL Configuration**: set the Site URL to your domain and add
+     `https://<your-domain>/auth/callback` to the redirect URLs.
+   - **Password security**: enable leaked password protection.
+
 Questions live in `content/questions/*.ts` and test forms in `content/tests.ts`.
 `npm run seed` validates them and regenerates `supabase/seed.sql`.
 
