@@ -1,6 +1,7 @@
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import { Fragment, memo, type ReactNode } from "react";
+import { assetUrl } from "@/lib/exam/assets";
 import type { RichText as RichTextValue, StimulusBlock } from "@/lib/exam/types";
 import { cn } from "@/lib/utils";
 import { Figure } from "./figures";
@@ -175,7 +176,7 @@ export function QuestionImage({ id, width, height }: { id: string; width: number
   return (
     // eslint-disable-next-line @next/next/no-img-element -- served from our own asset route, sized exactly
     <img
-      src={`/api/asset/${id}`}
+      src={assetUrl(id)}
       width={width}
       height={height}
       alt=""

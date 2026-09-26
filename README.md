@@ -98,7 +98,11 @@ Official College Board practice tests and question bank PDFs go in `SATBOOKS/` a
 python3 -m pip install pymupdf        # once
 npm run extract:official              # writes content/official/ (git-ignored)
 npm run seed:official                 # uploads questions, tests and images to Supabase
+npm run upload:images                 # copies images to the Storage CDN (NEXT_PUBLIC_ASSET_BASE)
 ```
+
+`upload:images` writes to the public `question-images` bucket, which has no public
+upload policy: add `SUPABASE_SECRET_KEY` to `.env.local` before running it.
 
 Reading and Writing questions are stored as text (with tables and graphs as
 images); Math questions are stored as images cropped from the PDFs. Question bank

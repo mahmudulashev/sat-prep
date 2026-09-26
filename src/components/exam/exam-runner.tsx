@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { assetUrl } from "@/lib/exam/assets";
 import { MAX_VIOLATIONS } from "@/lib/exam/constants";
 import type { AttemptPayload, AttemptState, ChoiceLetter, ExamQuestion, ProgressBody } from "@/lib/exam/types";
 import { cn } from "@/lib/utils";
@@ -112,7 +113,7 @@ export function ExamRunner({
     const images = [...ids].map((id) => {
       const img = new Image();
       img.decoding = "async";
-      img.src = `/api/asset/${id}`;
+      img.src = assetUrl(id);
       return img;
     });
     return () => images.forEach((img) => (img.src = ""));

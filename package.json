@@ -10,7 +10,8 @@
     "seed": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed.mts",
     "typecheck": "tsc --noEmit",
     "seed:official": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed-official.mts",
-    "extract:official": "python3 scripts/official/extract.py"
+    "extract:official": "python3 scripts/official/extract.py",
+    "upload:images": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/upload-images.mts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
