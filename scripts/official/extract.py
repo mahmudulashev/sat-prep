@@ -32,9 +32,9 @@ ASSETS = OUT / "assets"
 
 BOOK_TESTS = [4, 5, 6, 7, 8, 10, 11]
 
-# CSS pixels per PDF point, chosen so body text renders at about 16px.
-BOOK_SCALE = 16 / 10.5
-BANK_SCALE = 1.6
+# CSS pixels per PDF point, chosen so printed text matches the size of the test interface's own text.
+BOOK_SCALE = 1.85
+BANK_SCALE = 1.9
 # Images are stored at twice their CSS size so they stay sharp on retina screens.
 DEVICE_RATIO = 2
 
@@ -494,12 +494,17 @@ def page_bottom(page: fitz.Page) -> float:
     return page.rect.height - 48
 
 
+def full_size_pages(doc: fitz.Document, marker: str) -> list[fitz.Page]:
+    """Pages containing `marker`, last first. The guide's opening pages show
+    small thumbnails of the worksheets with the same headings but a sample
+    key, so the real, full-size worksheets are the later pages."""
+    return [page for page in reversed(list(doc)) if marker in page.get_text()]
+
+
 def parse_answer_key(n: int) -> list[list[str]]:
     doc = fitz.open(BOOKS / f"scoring-sat-practice-test-{n}-digital.pdf")
-    for page in doc:
+    for page in full_size_pages(doc, "Answer Key"):
         text = page.get_text()
-        if "Answer Key" not in text:
-            continue
         modules: list[list[str]] = []
         chunks = re.split(r"MARK YOUR\s*\n\s*CORRECT\s*\n\s*ANSWERS\s*\n", text)[1:]
         for chunk in chunks:
@@ -526,7 +531,7 @@ def parse_answer_key(n: int) -> list[list[str]]:
 
 def parse_score_table(n: int) -> dict:
     doc = fitz.open(BOOKS / f"scoring-sat-practice-test-{n}-digital.pdf")
-    for page in doc:
+    for page in full_size_pages(doc, "(# OF CORRECT ANSWERS)"):
         text = page.get_text()
         if "(# OF CORRECT ANSWERS)" not in text:
             continue
