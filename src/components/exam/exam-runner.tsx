@@ -28,6 +28,14 @@ type Local = { eliminated: Record<string, ChoiceLetter[]>; highlights: Record<st
 
 const storageKey = (attemptId: string) => `satify:attempt:${attemptId}`;
 
+/** Widest question image in a question, in CSS pixels (0 when there is none). */
+function widestImage(question: ExamQuestion) {
+  const text = [question.prompt, ...(question.choices ?? [])].join(" ");
+  const widths = [...text.matchAll(/\{\{img:[0-9a-f]+:(\d+):\d+\}\}/g)].map((m) => Number(m[1]));
+  for (const block of question.stimulus) if (block.type === "image") widths.push(block.width);
+  return Math.max(0, ...widths);
+}
+
 /** Seconds from the payload's server time until a timestamp. */
 function secondsUntil(iso: string | null, serverNow: string) {
   return iso ? Math.max(0, (new Date(iso).getTime() - new Date(serverNow).getTime()) / 1000) : 0;
@@ -113,8 +121,8 @@ export function ExamRunner({
   useEffect(() => {
     const ids = new Set(
       JSON.stringify(questions)
-        .match(/\{\{img:[0-9a-f]+/g)
-        ?.map((t) => t.slice(6)),
+        .match(/\{\{(?:img|flow):[0-9a-f]+/g)
+        ?.map((t) => t.slice(t.indexOf(":") + 1)),
     );
     for (const q of questions) for (const b of q.stimulus) if (b.type === "image") ids.add(b.asset);
     const images = [...ids].map((id) => {
@@ -548,7 +556,8 @@ export function ExamRunner({
   } else {
     body = (
       <div className="h-full overflow-y-auto">
-        <div className={cn("mx-auto px-6", current.prompt.includes("{{img:") ? "max-w-[960px]" : "max-w-[720px]")}>
+        {/* Wide question images keep their full size, so their text matches the choices. */}
+        <div className="mx-auto px-6" style={{ maxWidth: Math.min(Math.max(720, widestImage(current) + 48), 1200) }}>
           {questionColumn}
         </div>
       </div>

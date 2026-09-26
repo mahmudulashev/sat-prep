@@ -10,6 +10,7 @@ export type ChoiceLetter = "A" | "B" | "C" | "D";
  * Question text uses a small inline markup:
  *   *italic*   **bold**   $latex$   ___ (blank line)   \* (literal)
  *   {{img:<asset id>:<width>:<height>}} (question image)
+ *   {{flow:<asset id>:<width>:<height>:x,y,w,h;...}} (image shown as word pieces that wrap)
  */
 export type RichText = string;
 

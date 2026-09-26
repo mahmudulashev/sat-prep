@@ -11,7 +11,8 @@ type Token =
   | { kind: "math"; value: string; display: boolean }
   | { kind: "bold" | "italic" | "underline"; children: Token[] }
   | { kind: "blank" }
-  | { kind: "image"; id: string; width: number; height: number };
+  | { kind: "image"; id: string; width: number; height: number }
+  | { kind: "flow"; id: string; width: number; height: number; pieces: number[][] };
 
 const EMPHASIS = [
   ["**", "bold"],
@@ -66,6 +67,19 @@ function tokenize(input: string): Token[] {
       if (id && Number(width) > 0 && Number(height) > 0) {
         flush();
         tokens.push({ kind: "image", id, width: Number(width), height: Number(height) });
+        i = end + 2;
+        continue;
+      }
+    }
+
+    // {{flow:id:w:h:x,y,w,h;...}} - an image shown as word-sized pieces that wrap like text.
+    if (rest.startsWith("{{flow:")) {
+      const end = input.indexOf("}}", i);
+      const [id, width, height, list] = (end === -1 ? "" : input.slice(i + 7, end)).split(":");
+      const pieces = (list ?? "").split(";").map((p) => p.split(",").map(Number));
+      if (id && Number(width) > 0 && pieces.every((p) => p.length === 4 && p.every(Number.isFinite))) {
+        flush();
+        tokens.push({ kind: "flow", id, width: Number(width), height: Number(height), pieces });
         i = end + 2;
         continue;
       }
@@ -153,6 +167,8 @@ function renderTokens(tokens: Token[]): ReactNode[] {
         );
       case "image":
         return <QuestionImage key={index} id={token.id} width={token.width} height={token.height} />;
+      case "flow":
+        return <FlowImage key={index} {...token} />;
     }
   });
 }
@@ -186,6 +202,30 @@ export function QuestionImage({ id, width, height }: { id: string; width: number
       className="question-image"
       style={{ aspectRatio: `${width} / ${height}` }}
     />
+  );
+}
+
+/** Drawn math cut into word-sized pieces of one image, wrapping like text. */
+function FlowImage({ id, width, height, pieces }: { id: string; width: number; height: number; pieces: number[][] }) {
+  const src = `url(${assetUrl(id)})`;
+  return (
+    <span className="question-flow">
+      {pieces.map(([x, y, w, h], i) => (
+        <Fragment key={i}>
+          {i > 0 && " "}
+          <span
+            className="inline-block align-middle"
+            style={{
+              width: w,
+              height: h,
+              backgroundImage: src,
+              backgroundSize: `${width}px ${height}px`,
+              backgroundPosition: `-${x}px -${y}px`,
+            }}
+          />
+        </Fragment>
+      ))}
+    </span>
   );
 }
 

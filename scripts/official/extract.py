@@ -101,11 +101,25 @@ class Line:
 
 def lines_in(page: fitz.Page, clip: fitz.Rect) -> list[Line]:
     out: list[Line] = []
-    data = page.get_text("dict", clip=clip)
+    data = page.get_text("rawdict", clip=clip)
     for block in data["blocks"]:
         for line in block.get("lines", []):
             spans = []
             for s in line["spans"]:
+                # Some PDFs put a hair-thin space inside words ("shor t"): drop
+                # a thin space when the letters on both sides touch.
+                chars = s["chars"]
+                s["text"] = "".join(
+                    c["c"]
+                    for k, c in enumerate(chars)
+                    if not (
+                        c["c"] == " "
+                        and c["bbox"][2] - c["bbox"][0] < 0.8
+                        and 0 < k < len(chars) - 1
+                        and chars[k + 1]["bbox"][0] - chars[k - 1]["bbox"][2] < 0.8
+                        and "referenced Conten" not in "".join(ch["c"] for ch in chars)
+                    )
+                )
                 if not s["text"]:
                     continue
                 font = s["font"].lower()
@@ -150,12 +164,39 @@ def lines_in(page: fitz.Page, clip: fitz.Rect) -> list[Line]:
     return merged
 
 
-def drawings_in(page: fitz.Page, clip: fitz.Rect, ignore: list[fitz.Rect] = ()) -> list[fitz.Rect]:
+_DRAWINGS: dict[tuple[str, int], list[dict]] = {}
+
+
+def page_drawings(page: fitz.Page) -> list[dict]:
+    """The page's vector drawings (cached; reading them is slow)."""
+    key = (page.parent.name, page.number)
+    if key not in _DRAWINGS:
+        _DRAWINGS[key] = page.get_drawings()
+    return _DRAWINGS[key]
+
+
+def is_glyph(d: dict) -> bool:
+    """A letter drawn as a small filled shape (the bank draws its math this way)."""
+    return d.get("type") in ("f", "fs") and d["rect"].width < 14 and d["rect"].height < 14
+
+
+def drawings_in(page: fitz.Page, clip: fitz.Rect, ignore: list[fitz.Rect] = (), glyphs: bool = True) -> list[fitz.Rect]:
     rects = []
-    for d in page.get_drawings():
+    for d in page_drawings(page):
+        if not glyphs and is_glyph(d):
+            continue
         r = fitz.Rect(d["rect"])
         if r.is_empty and (r.width < 0.5 and r.height < 0.5):
             continue
+        # Straight lines (table borders) have no area, and empty rects never
+        # intersect anything, so give them their stroke thickness.
+        # A stroke only widens a line across its direction.
+        half = max((d.get("width") or 0) / 2, 0.5)
+        if r.width >= r.height:
+            if r.height < 2 * half:
+                r.y0, r.y1 = r.y0 - half, r.y1 + half
+        elif r.width < 2 * half:
+            r.x0, r.x1 = r.x0 - half, r.x1 + half
         if not clip.intersects(r):
             continue
         if any(i.contains(r) for i in ignore):
@@ -183,15 +224,16 @@ def pad(rect: fitz.Rect, amount: float, within: fitz.Rect) -> fitz.Rect:
 
 
 def cluster(rects: list[fitz.Rect], gap: float) -> list[fitz.Rect]:
+    """Merges rectangles that are within `gap` of each other."""
     groups = [fitz.Rect(r) for r in rects]
     changed = True
     while changed:
         changed = False
         out: list[fitz.Rect] = []
         for r in groups:
-            for o in out:
+            for i, o in enumerate(out):
                 if fitz.Rect(o.x0 - gap, o.y0 - gap, o.x1 + gap, o.y1 + gap).intersects(r):
-                    o |= r
+                    out[i] = o | r
                     changed = True
                     break
             else:
@@ -230,17 +272,54 @@ def line_markup(line: Line) -> str:
     return re.sub(r"\s+", " ", text)
 
 
+def _marker(text: str) -> str:
+    """Regex for a hidden marker, allowing stray spaces inside it."""
+    return "(?i:" + r"\s*".join(re.escape(c) for c in text.replace(" ", "")) + ")"
+
+
+MARK_START = _marker("Start referenced Content:")
+MARK_END = _marker("End referenced Content")
+_WORDS: set[str] | None = None
+
+
+def is_word(word: str) -> bool:
+    global _WORDS
+    if _WORDS is None:
+        try:
+            _WORDS = {w.strip().lower() for w in open("/usr/share/dict/words")}
+        except OSError:
+            _WORDS = set()
+    # The word list includes single letters; only "a" and "I" are words.
+    return (len(word) > 1 or word.lower() in ("a", "i")) and word.lower() in _WORDS
+
+
 def join_lines(lines: list[Line]) -> str:
     out = ""
     for line in lines:
         piece = line_markup(line).strip()
+        # Underlined parts are marked with hidden "Start/End referenced
+        # Content" text, which in some PDFs shifts the line breaks inside the
+        # marked part, splitting words ("t" + "he").
+        marked = len(re.findall(MARK_START, out)) > len(re.findall(MARK_END, out))
         if not out:
             out = piece
         elif out.endswith("-") and not out.endswith(" -"):
             out += piece
         else:
-            out += " " + piece
-    return out.strip()
+            left = re.search(r"([A-Za-z]+)$", out)
+            right = re.match(r"([A-Za-z]+)", piece)
+            split_word = (
+                (marked or re.search(r"(?i)(conten|referenced|start|end|r)$", out))
+                and left
+                and right
+                and is_word(left.group(1) + right.group(1))
+                and not (is_word(left.group(1)) and is_word(right.group(1)))
+            )
+            out += piece if split_word else " " + piece
+    out = re.sub(MARK_START + r"\s*", " ++", out)
+    # Some end markers carry their own period.
+    out = re.sub(r"\s*" + MARK_END + r"\s*\.?", "++ ", out)
+    return re.sub(r"\s+", " ", out).strip()
 
 
 def paragraphs(lines: list[Line]) -> list[list[Line]]:
@@ -249,10 +328,18 @@ def paragraphs(lines: list[Line]) -> list[list[Line]]:
         return []
     heights = sorted(l.bbox.height for l in lines)
     typical = heights[len(heights) // 2] or 10
+    # Line spacing differs between PDFs, so compare each step with the usual
+    # distance between lines when there are enough lines to know it.
+    steps = sorted(b.bbox.y0 - a.bbox.y0 for a, b in zip(lines, lines[1:]))
+    usual = steps[len(steps) // 2] if len(steps) >= 3 else None
     groups: list[list[Line]] = [[lines[0]]]
     for prev, line in zip(lines, lines[1:]):
         gap = line.bbox.y0 - prev.bbox.y1
-        if gap > typical * 0.55:
+        if usual is not None:
+            new_paragraph = line.bbox.y0 - prev.bbox.y0 > usual * 1.3
+        else:
+            new_paragraph = gap > typical * 0.9
+        if new_paragraph:
             groups.append([line])
         else:
             groups[-1].append(line)
@@ -264,7 +351,7 @@ def is_bullet(line: Line) -> bool:
 
 
 PROMPT_START = re.compile(
-    r"(Which choice|Which finding|Which quotation|Which statement|Which of the following|Based on the text|"
+    r"(Which choice|Which completion|Which finding|Which quotation|Which statement|Which of the following|Based on the text|"
     r"According to the text|What does the text|As used in the text|The student wants|How would|What is the)"
 )
 
@@ -281,7 +368,7 @@ def english_blocks(pieces: list[tuple[fitz.Page, list[Line], list[fitz.Rect]]], 
             last = next((it for it in reversed(items) if it[1] == "para"), None)
             if last is not None and last is items[-1]:
                 tail = join_lines(last[2][-1:]).rstrip("*")
-                if not re.search(r"[.?!:\"”]$", tail):
+                if not re.search(r"[.?!:\"”]$", tail) and not PROMPT_START.match(groups[0][0].text.strip()):
                     last[2].extend(groups.pop(0))
         for group in groups:
             items.append(((pi, group[0].bbox.y0), "para", group, page))
@@ -295,8 +382,10 @@ def english_blocks(pieces: list[tuple[fitz.Page, list[Line], list[fitz.Rect]]], 
         key, _, group, page = items[-1]
         for i, line in enumerate(group[1:], 1):
             if PROMPT_START.match(line.text.strip()):
+                # The line may sit in a later piece than the paragraph's start.
+                li = next((j for j, (_, ls, _) in enumerate(pieces) if any(l is line for l in ls)), key[0])
                 items[-1] = (key, "para", group[:i], page)
-                items.append(((key[0], line.bbox.y0), "para", group[i:], page))
+                items.append(((li, line.bbox.y0), "para", group[i:], pieces[li][0]))
                 break
 
     prompt = ""
@@ -305,21 +394,26 @@ def english_blocks(pieces: list[tuple[fitz.Page, list[Line], list[fitz.Rect]]], 
         prompt_pos = items[-1][0]
         prompt = join_lines(items.pop()[2])
 
-    # With a table or graph, show everything above the prompt exactly as
-    # printed so the figure and its labels stay intact.
+    # With a table or graph, show the figure and everything above it exactly
+    # as printed so its labels stay intact. Paragraphs below the figure are
+    # ordinary text, so they are shown at the normal size.
     if any(kind == "figure" for _, kind, _, _ in items):
         blocks = []
         for pi, (page, lines, figures) in enumerate(pieces):
-            rects = [l.bbox for l in lines] + figures
             if prompt_pos is not None and pi == prompt_pos[0]:
-                rects = [r for r in rects if r.y1 <= prompt_pos[1] + 1]
+                lines = [l for l in lines if l.bbox.y1 <= prompt_pos[1] + 1]
+                figures = [f for f in figures if f.y1 <= prompt_pos[1] + 1]
             elif prompt_pos is not None and pi > prompt_pos[0]:
-                rects = []
-            box = None
-            for r in rects:
-                box = fitz.Rect(r) if box is None else box | r
+                lines, figures = [], []
+            below: list[Line] = []
+            if figures:
+                figure_bottom = max(f.y1 for f in figures)
+                below = [l for l in lines if l.bbox.y0 >= figure_bottom]
+                lines = [l for l in lines if l.bbox.y0 < figure_bottom]
+            box = content_box(lines, figures)
             if box is not None:
                 blocks.append(image_block(store.crop(page, pad(box, 3, page.rect), scale)))
+            blocks.extend({"type": "text", "text": join_lines(group)} for group in paragraphs(below))
         return blocks, prompt
 
     blocks: list[dict] = []
@@ -379,26 +473,49 @@ def max_gap(line: Line) -> float:
 def figure_regions(page: fitz.Page, clip: fitz.Rect, lines: list[Line], ignore: list[fitz.Rect]):
     """Finds tables and graphs (vector drawings) and the text lines that belong
     to them (titles, headers, cells, labels, legends)."""
-    drawn = [r for r in drawings_in(page, clip, ignore) if r.width > 2 or r.height > 2]
-    # Short horizontal rules under a word are underlines or blanks, not figures.
-    drawn = [r for r in drawn if not (r.height < 2 and r.width < 120)]
+    # Letters drawn as shapes are text, not figure parts.
+    drawn = [r for r in drawings_in(page, clip, ignore, glyphs=False) if r.width > 2 or r.height > 2]
+    # Short horizontal rules under a word are underlines or blanks, not
+    # figures. Table rules sit between rows instead of under the text.
+    def underline(r: fitz.Rect) -> bool:
+        if r.height >= 2:
+            return False
+        y = (r.y0 + r.y1) / 2
+        return any(
+            l.bbox.y0 + l.bbox.height * 0.4 < y < l.bbox.y1 + 1 and r.x0 >= l.bbox.x0 - 1 and r.x1 <= l.bbox.x1 + 1 for l in lines
+        )
+
+    drawn = [r for r in drawn if not underline(r)]
+    # Table rules with the same left and right ends belong together even when
+    # the rows are far apart.
+    rules = sorted((r for r in drawn if r.height < 3 and r.width > 40), key=lambda r: r.y0)
+    for a, b in zip(rules, rules[1:]):
+        if abs(a.x0 - b.x0) < 3 and abs(a.x1 - b.x1) < 3 and b.y0 - a.y1 < 45:
+            drawn.append(fitz.Rect(a.x0, a.y0, a.x1, b.y1))
     figures = [f for f in cluster(drawn, 16) if f.width > 40 and f.height > 12]
     inside: set[int] = set()
     width = clip.width
     changed = True
     while changed:
         changed = False
-        for fig in figures:
+        for fi, fig in enumerate(figures):
             for i, line in enumerate(lines):
                 if i in inside:
                     continue
                 c = fitz.Point((line.bbox.x0 + line.bbox.x1) / 2, (line.bbox.y0 + line.bbox.y1) / 2)
                 within = pad(fig, 4, clip).contains(c)
                 near = -2 <= fig.y0 - line.bbox.y1 <= 12 or -2 <= line.bbox.y0 - fig.y1 <= 12
-                tabular = max_gap(line) >= 8 or line.bbox.width < width * 0.8
-                if within or (near and tabular):
+                # Titles, legends and table rows are short or have wide gaps;
+                # passage lines run the width of the column.
+                sentence = len(line.text.split()) >= 5 and re.search(r"[.?]\s*$", line.text) is not None
+                tabular = (max_gap(line) >= 8 or line.bbox.width < width * 0.6) and not sentence
+                # Axis labels sit just left or right of the plotted area.
+                beside = fig.y0 - 2 <= c.y <= fig.y1 + 2 and (
+                    fig.x0 - 45 <= line.bbox.x1 <= fig.x0 + 4 or fig.x1 - 4 <= line.bbox.x0 <= fig.x1 + 45
+                )
+                if within or (near and tabular) or (beside and line.bbox.width < width * 0.5):
                     inside.add(i)
-                    fig |= line.bbox
+                    fig = figures[fi] = fig | line.bbox
                     changed = True
     figures = [f for f in figures if f.height > 25]
     return figures, [l for i, l in enumerate(lines) if i not in inside]
@@ -490,7 +607,7 @@ BAR_FILL = (0.82, 0.826, 0.832)
 
 def find_bars(page: fitz.Page) -> list[tuple[int, fitz.Rect]]:
     bars = []
-    for d in page.get_drawings():
+    for d in page_drawings(page):
         fill = d.get("fill")
         r = fitz.Rect(d["rect"])
         if not fill or not (8 <= r.height <= 16 and 150 <= r.width <= 560):
@@ -504,9 +621,12 @@ def find_bars(page: fitz.Page) -> list[tuple[int, fitz.Rect]]:
 
 
 def page_bottom(page: fitz.Page) -> float:
-    for block in page.get_text("blocks"):
-        if "Unauthorized copying" in block[4]:
-            return block[1] - 4
+    # The footer holds the copyright line and the "CONTINUE" arrow.
+    tops = [b[1] for b in page.get_text("blocks") if "Unauthorized copying" in b[4] or b[4].startswith("CONTINUE")]
+    tops += [r.y0 for r in page.search_for("CONTINUE") if r.y0 > page.rect.height * 0.8]
+    if tops:
+        # The arrow's drawing starts a little above its text.
+        return min(tops) - 6
     return page.rect.height - 48
 
 
@@ -642,6 +762,10 @@ def book_questions(n: int) -> list[list[BookQuestion]]:
                     bottom = min([first_top] + [y - 3 for y in right_bars])
                     area = fitz.Rect(cols[0].x0, col.y0, cols[1].x1, bottom)
                     full_width_continuation = True
+                # The end-of-module STOP box spans both columns; stop above it.
+                stop_tops = [r.y0 for r in page.search_for("If you finish before time") if r.y0 > area.y0]
+                if stop_tops:
+                    area.y1 = min(area.y1, min(stop_tops) - 40)
                 # Full-width text there (e.g. module directions) is not a continuation.
                 band = page.get_text("dict", clip=fitz.Rect(cols[0].x0, area.y0, cols[1].x1, area.y1))["blocks"]
                 crosses = any(
@@ -876,6 +1000,19 @@ def build_book(n: int, store: AssetStore) -> tuple[list[dict], list[dict]]:
                     figures, text_lines = figure_regions(seg.page, rect, lines, ignore)
                     pieces.append((seg.page, text_lines, figures))
                 stimulus, prompt = english_blocks(pieces, BOOK_SCALE, store)
+                if "?" not in prompt:
+                    # Part of the text is drawn as shapes, not letters, so it
+                    # can't be read: show the whole stem exactly as printed.
+                    had_blank = "___" in json.dumps(stimulus) + prompt
+                    stimulus, prompt = [], ""
+                    if had_blank:
+                        # The standard wording of every fill-in-the-blank question.
+                        prompt = "Which choice completes the text with the most logical and precise word or phrase?"
+                    for seg, rect in span_pieces(q, begin, stem_end):
+                        inner, lines, drawn = piece_content(seg, rect)
+                        box = content_box(lines, drawn)
+                        if box:
+                            stimulus.append(image_block(store.crop(seg.page, pad(box, 3, inner), BOOK_SCALE)))
                 choices = []
                 for L, (start, stop, _, x_to) in zip(LETTERS, choice_ranges):
                     cl: list[Line] = []
@@ -1054,6 +1191,123 @@ def answer_from_rationale(text: str) -> str:
     return m.group(1) if m else ""
 
 
+def widest_gap(rects: list[fitz.Rect], y_lo: float, y_hi: float, default: float) -> float:
+    """Middle of the widest empty horizontal band between y_lo and y_hi."""
+    spans = sorted((max(r.y0, y_lo), min(r.y1, y_hi)) for r in rects if r.y1 > y_lo and r.y0 < y_hi and r.height < y_hi - y_lo)
+    best, cursor = None, y_lo
+    for a, b in spans:
+        if a > cursor and (best is None or a - cursor > best[1] - best[0]):
+            best = (cursor, a)
+        cursor = max(cursor, b)
+    if y_hi > cursor and (best is None or y_hi - cursor > best[1] - best[0]):
+        best = (cursor, y_hi)
+    return (best[0] + best[1]) / 2 if best and best[1] - best[0] >= 1 else default
+
+
+ODD_CHAR = re.compile(r"[\ue000-\uf8ff\ufffd]")
+
+
+def plain_lines(lines: list[Line], drawn: list[fitz.Rect]) -> bool:
+    """True when lines can be shown as ordinary text: no fraction bars or
+    other drawn math, no raised or lowered (super/subscript) pieces."""
+    if not lines:
+        return False
+    for r in drawn:
+        if any(fitz.Rect(l.bbox.x0 - 2, l.bbox.y0 - 4, l.bbox.x1 + 2, l.bbox.y1 + 4).intersects(r) for l in lines):
+            return False
+    for line in lines:
+        if ODD_CHAR.search(line.text):
+            return False
+        spans = [sp for sp in line.spans if sp.text.strip()]
+        heights = sorted(sp.bbox.height for sp in spans)
+        typical = heights[len(heights) // 2]
+        mid = sorted((sp.bbox.y0 + sp.bbox.y1) / 2 for sp in spans)[len(spans) // 2]
+        for sp in spans:
+            if sp.bbox.height < typical * 0.8 or abs((sp.bbox.y0 + sp.bbox.y1) / 2 - mid) > typical * 0.2:
+                return False
+    return True
+
+
+def ink_rects(page: fitz.Page, clip: fitz.Rect) -> list[fitz.Rect]:
+    """Everything visible in an area: drawn shapes (the bank draws its math
+    as shapes) and text characters."""
+    ink = [r & clip for r in drawings_in(page, clip) if r.width > 0.3 or r.height > 0.3]
+    raw = page.get_text("rawdict", clip=clip)
+    for block in raw["blocks"]:
+        for line in block.get("lines", []):
+            for span in line["spans"]:
+                for ch in span["chars"]:
+                    if ch["c"].strip():
+                        ink.append(fitz.Rect(ch["bbox"]) & clip)
+    return [r for r in ink if not r.is_empty or r.width > 0 or r.height > 0]
+
+
+def ink_rows(ink: list[fitz.Rect], join: float = 2.5) -> list[list[float]]:
+    """Vertical bands of ink. Fractions and exponents join their line."""
+    rows: list[list[float]] = []
+    for a, b in sorted((r.y0, r.y1) for r in ink):
+        if rows and a <= rows[-1][1] + join:
+            rows[-1][1] = max(rows[-1][1], b)
+        else:
+            rows.append([a, b])
+    return rows
+
+
+def flow_token(page: fitz.Page, rows: list[list[float]], ink: list[fitz.Rect], bounds: fitz.Rect, store: AssetStore) -> str:
+    """A paragraph of drawn math as one image cut into word-sized pieces, so
+    the page can wrap it like text at its full size:
+    {{flow:<asset>:<width>:<height>:x,y,w,h;...}} in CSS pixels."""
+    top, bottom = rows[0][0] - 1.5, rows[-1][1] + 1.5
+    xs = [r.x0 for r in ink] + [r.x1 for r in ink]
+    crop = fitz.Rect(min(xs) - 1, top, max(xs) + 1, bottom) & bounds
+    asset = store.crop(page, crop, BANK_SCALE)
+    k = BANK_SCALE
+    pieces: list[str] = []
+    for y0, y1 in rows:
+        spans = sorted((r.x0, r.x1) for r in ink if y0 - 0.1 <= (r.y0 + r.y1) / 2 <= y1 + 0.1)
+        words: list[list[float]] = []
+        for a, b in spans:
+            if words and a <= words[-1][1] + 1.8:
+                words[-1][1] = max(words[-1][1], b)
+            else:
+                words.append([a, b])
+        band_top, band_bottom = max(y0 - 1.2, crop.y0), min(y1 + 1.2, crop.y1)
+        for a, b in words:
+            x0, x1 = max(a - 0.6, crop.x0), min(b + 0.6, crop.x1)
+            pieces.append(
+                f"{(x0 - crop.x0) * k:.1f},{(band_top - crop.y0) * k:.1f},{(x1 - x0) * k:.1f},{(band_bottom - band_top) * k:.1f}"
+            )
+    return f"{{{{flow:{asset['id']}:{asset['w']}:{asset['h']}:{';'.join(pieces)}}}}}"
+
+
+def bank_math_stem(page: fitz.Page, rect: fitz.Rect, lines: list[Line], store: AssetStore) -> tuple[list[dict], str]:
+    """A bank math stem as blocks. Tables and graphs stay exact images; the
+    rest (text with drawn math) becomes word-by-word flowing image pieces so it
+    wraps to the column at the normal size. The last block is the prompt."""
+    figures, _ = figure_regions(page, rect, lines, [])
+    ink = [r for r in ink_rects(page, rect) if not any(pad(f, 1, page.rect).contains((r.tl + r.br) / 2) for f in figures)]
+    items: list[tuple[float, dict]] = [(f.y0, image_block(store.crop(page, pad(f, 1.5, rect), BANK_SCALE))) for f in figures]
+    paragraph: list[list[float]] = []
+    groups: list[list[list[float]]] = []
+    for row in ink_rows(ink):
+        if paragraph and row[0] - paragraph[-1][1] > 9:
+            groups.append(paragraph)
+            paragraph = []
+        paragraph.append(row)
+    if paragraph:
+        groups.append(paragraph)
+    for group in groups:
+        mine = [r for r in ink if group[0][0] - 0.1 <= (r.y0 + r.y1) / 2 <= group[-1][1] + 0.1]
+        items.append((group[0][0], {"type": "text", "text": flow_token(page, group, mine, rect, store)}))
+    items.sort(key=lambda it: it[0])
+    blocks = [b for _, b in items]
+    if not blocks:
+        return [], ""
+    last = blocks.pop()
+    prompt = last["text"] if last["type"] == "text" else image_token({"id": last["asset"], "w": last["width"], "h": last["height"]})
+    return blocks, prompt
+
+
 def build_bank(file: Path, subject: str, store: AssetStore) -> list[dict]:
     doc = fitz.open(file)
     out: list[dict] = []
@@ -1094,7 +1348,23 @@ def build_bank(file: Path, subject: str, store: AssetStore) -> list[dict]:
 
             qsi, qrect = lab["Question"]
             page, region = item.segments[qsi]
+
+            # Superscripts and fractions stick out above and below their
+            # choice label, so neighbouring parts are split at the widest
+            # empty band between them rather than at a label's top edge.
+            def split_above(si: int, rect: fitz.Rect, floor: float) -> float:
+                pg, reg = item.segments[si]
+                content = [l.bbox for l in seg_lines[si]] + drawings_in(pg, reg)
+                mid = (rect.y0 + rect.y1) / 2
+                return widest_gap(content, max(floor, mid - 40), mid, rect.y0 - 3)
+
             stem_bottom = until(qsi, ["Answer", "A", "Correct", "Rationale"])
+            # Choice A starts below the "Answer" heading when there is one.
+            a_floor = stem_bottom
+            if "Answer" in lab and lab["Answer"][0] == qsi and is_mcq and lab["Answer"][1].y1 <= lab["A"][1].y0:
+                a_floor = lab["Answer"][1].y1 + 1
+            elif is_mcq and lab["A"][0] == qsi:
+                stem_bottom = a_floor = split_above(qsi, lab["A"][1], qrect.y1 + 3)
             stem_rect = fitz.Rect(12, qrect.y1 + 3, page.rect.width - 12, stem_bottom)
             stem_lines = [l for l in seg_lines[qsi] if stem_rect.contains(l.bbox.tl + (1, 1))]
 
@@ -1105,7 +1375,14 @@ def build_bank(file: Path, subject: str, store: AssetStore) -> list[dict]:
                     pg, _ = item.segments[si]
                     later = [LETTERS[j] for j in range(i + 1, 4)] + ["Correct", "Rationale"]
                     bottom = until(si, later)
-                    choice_spots.append((pg, fitz.Rect(rect.x1 + 3, rect.y0 - 2, pg.rect.width - 12, bottom)))
+                    top = rect.y0 - 2
+                    if i == 0 and si == qsi:
+                        top = max(a_floor, split_above(si, rect, a_floor))
+                    elif i and lab[LETTERS[i - 1]][0] == si:
+                        top = split_above(si, rect, lab[LETTERS[i - 1]][1].y1)
+                    if i < 3 and lab[LETTERS[i + 1]][0] == si:
+                        bottom = split_above(si, lab[LETTERS[i + 1]][1], rect.y1)
+                    choice_spots.append((pg, fitz.Rect(rect.x1 + 3, top, pg.rect.width - 12, bottom)))
 
             record: dict = {
                 "id": f"qb-{item.qid}",
@@ -1124,15 +1401,19 @@ def build_bank(file: Path, subject: str, store: AssetStore) -> list[dict]:
                     raise RuntimeError("empty choice text")
                 record.update(stimulus=stimulus, prompt=prompt, choices=choices if is_mcq else None)
             else:
-                box = content_box(stem_lines, drawings_in(page, stem_rect))
-                prompt = image_token(store.crop(page, pad(box, 2, stem_rect), BANK_SCALE)) if box else ""
+                stimulus, prompt = bank_math_stem(page, stem_rect, stem_lines, store)
                 choices = []
                 for pg, rect in choice_spots:
-                    cbox = content_box(lines_in(pg, rect), drawings_in(pg, rect))
+                    clines = lines_in(pg, rect)
+                    cdrawn = [r for r in drawings_in(pg, rect) if r.width > 0.5 or r.height > 0.5]
+                    cbox = content_box(clines, cdrawn)
                     if cbox is None:
                         raise RuntimeError("empty choice")
-                    choices.append(image_token(store.crop(pg, pad(cbox & rect, 1.5, rect), BANK_SCALE)))
-                record.update(stimulus=[], prompt=prompt, choices=choices if is_mcq else None)
+                    if not cdrawn and plain_lines(clines, []):
+                        choices.append(join_lines(clines))
+                    else:
+                        choices.append(image_token(store.crop(pg, pad(cbox & rect, 1.5, rect), BANK_SCALE)))
+                record.update(stimulus=stimulus, prompt=prompt, choices=choices if is_mcq else None)
 
             # Rationale: from the label to the end of the item, possibly
             # continuing on following pages.

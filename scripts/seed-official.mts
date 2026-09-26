@@ -44,7 +44,7 @@ const { questions, forms } = JSON.parse(readFileSync(new URL("official.json", DI
 
 // Every image referenced by the content, with its display size.
 const sizes = new Map<string, { width: number; height: number }>();
-const TOKEN = /\{\{img:([0-9a-f]+):(\d+):(\d+)\}\}/g;
+const TOKEN = /\{\{(?:img|flow):([0-9a-f]+):(\d+):(\d+)[:}]/g;
 for (const q of questions) {
   for (const text of [q.prompt, q.explanation, ...(q.choices ?? []), ...q.stimulus.map((b) => ("text" in b ? String(b.text) : ""))]) {
     for (const m of text.matchAll(TOKEN)) sizes.set(m[1], { width: Number(m[2]), height: Number(m[3]) });
