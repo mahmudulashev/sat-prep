@@ -243,11 +243,6 @@ mark[data-hl][data-underline="true"] {
     transform: translate(2px, -2px);
   }
 }
-@keyframes scroll-progress {
-  to {
-    transform: scaleX(1);
-  }
-}
 
 /* Headline lines slide up from behind a mask on first load */
 .rise-line {
@@ -277,25 +272,6 @@ mark[data-hl][data-underline="true"] {
   transform-origin: center;
   animation: pop 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   animation-delay: var(--d, 0ms);
-}
-
-/* Reading progress along the top of the landing page */
-.scroll-progress {
-  display: none;
-}
-@supports (animation-timeline: scroll()) {
-  .scroll-progress {
-    display: block;
-    position: fixed;
-    inset: 0 0 auto;
-    z-index: 50;
-    height: 3px;
-    background: linear-gradient(90deg, var(--color-brand), var(--color-english), var(--color-lime));
-    transform: scaleX(0);
-    transform-origin: 0 50%;
-    animation: scroll-progress linear both;
-    animation-timeline: scroll(root);
-  }
 }
 
 /*

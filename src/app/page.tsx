@@ -22,7 +22,6 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen" data-page-scale="landing">
-      <div className="scroll-progress" aria-hidden />
       <RevealOnScroll />
       <SiteHeader signedIn={Boolean(user)} />
 
@@ -174,7 +173,7 @@ function ScorePreview() {
 
 function Tests() {
   return (
-    <section id="tests" className="scroll-mt-24 pt-24">
+    <section id="tests" className="scroll-mt-6 pt-24">
       <SectionHeading
         eyebrow="Practice tests"
         title="Three ways to practice"
@@ -218,7 +217,7 @@ function Tests() {
 
 function Features() {
   return (
-    <section id="features" className="scroll-mt-24 pt-24">
+    <section id="features" className="scroll-mt-6 pt-24">
       <SectionHeading
         eyebrow="Features"
         title="Everything you need on test day"
@@ -233,7 +232,7 @@ function Features() {
 
 function Plans({ signedIn }: { signedIn: boolean }) {
   return (
-    <section id="plans" className="scroll-mt-24 pt-24">
+    <section id="plans" className="scroll-mt-6 pt-24">
       <SectionHeading eyebrow="Plans" title="Free, with a daily rhythm" body="Limits reset every day at 00:00 UTC." />
       <div className="mx-auto mt-10 grid max-w-4xl gap-5 md:grid-cols-2">
         <div data-reveal="zoom" className="rounded-3xl bg-surface p-8 shadow-card">
