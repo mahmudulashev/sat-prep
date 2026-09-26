@@ -59,8 +59,8 @@ export function DeleteAttemptButton({ attemptId, title, score }: { attemptId: st
             </h2>
             <p className="mt-1.5 text-sm text-muted">
               {title}
-              {score !== null && <> · score {score}</>} will be removed from your history, charts and stats. This
-              can&apos;t be undone, and it still counts toward the day&apos;s test limit.
+              {score !== null && <> · score {score}</>} will be removed from your history, charts and stats. This can&apos;t be
+              undone, and it still counts toward the day&apos;s test limit.
             </p>
             {failed && <p className="mt-3 text-sm text-danger">Couldn&apos;t delete this result. Please try again.</p>}
             <div className="mt-6 flex justify-end gap-2">

@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation";
+import { TestsView } from "@/components/dashboard/tests-view";
+
+export const metadata = { title: "Tests" };
 
 export default function TestsIndex() {
-  redirect("/dashboard/tests/math");
+  return <TestsView />;
 }

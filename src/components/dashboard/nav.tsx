@@ -45,15 +45,7 @@ export function Sidebar() {
   );
 }
 
-function NavGroup({
-  title,
-  items,
-  pathname,
-}: {
-  title: string;
-  items: typeof MAIN;
-  pathname: string;
-}) {
+function NavGroup({ title, items, pathname }: { title: string; items: typeof MAIN; pathname: string }) {
   return (
     <nav className="mt-5">
       <p className="px-3 text-xs font-semibold tracking-wide text-muted uppercase">{title}</p>
