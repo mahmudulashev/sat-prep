@@ -140,7 +140,6 @@ export function useLockdown({ active, initial = [], maxStrikes, onLimitReached }
     if (process.env.NODE_ENV === "production") {
       trapTimer = window.setInterval(() => {
         const start = performance.now();
-        // eslint-disable-next-line no-debugger
         debugger;
         if (performance.now() - start > 120) record("devtools");
       }, 1000);
