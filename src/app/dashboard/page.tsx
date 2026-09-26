@@ -145,7 +145,7 @@ export default async function DashboardPage() {
               </ButtonLink>
             </div>
           )}
-          <Card title="Recent attempts">
+          <Card title="Recent attempts" className="flex-1">
             <ul className="-my-2 divide-y divide-line">
               {completed.slice(0, 4).map((a) => (
                 <li key={a.id}>
@@ -218,12 +218,22 @@ function StatCard({
   );
 }
 
-function Card({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+function Card({
+  title,
+  subtitle,
+  className,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="rounded-3xl bg-surface p-6 shadow-card">
+    <section className={cn("flex flex-col rounded-3xl bg-surface p-6 shadow-card", className)}>
       <h2 className="font-bold">{title}</h2>
       {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
-      <div className="mt-5">{children}</div>
+      <div className="mt-5 flex min-h-0 flex-1 flex-col">{children}</div>
     </section>
   );
 }

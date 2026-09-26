@@ -37,9 +37,9 @@ const NEUTRAL = "#d5d6e2";
 const AXIS_TICK = { fill: MUTED, fontSize: "0.75rem" };
 
 /** Chart area sized in rem (from a px height at the default text size), so charts grow with the page. */
-function ChartBox({ height, children }: { height: number; children: React.ReactElement }) {
+function ChartBox({ height, grow, children }: { height: number; grow?: boolean; children: React.ReactElement }) {
   return (
-    <div style={{ height: `${height / 16}rem` }}>
+    <div className={grow ? "min-h-0 flex-1" : undefined} style={grow ? { minHeight: `${height / 16}rem` } : { height: `${height / 16}rem` }}>
       <ResponsiveContainer width="100%" height="100%">
         {children}
       </ResponsiveContainer>
@@ -241,13 +241,13 @@ export function ScoreTrend({ data }: { data: TrendDatum[] }) {
     ...(hasMath ? [{ key: "math" as const, label: "Math", color: SUBJECT_COLOR.math }] : []),
   ];
   return (
-    <div>
+    <div className="flex h-full flex-col">
       {series.length > 1 && (
         <div className="mb-3">
           <Legend items={series.map((s) => ({ label: s.label, color: s.color }))} />
         </div>
       )}
-      <ChartBox height={250}>
+      <ChartBox height={250} grow>
         <LineChart data={data} margin={{ top: 10, right: 16, bottom: 0, left: -8 }}>
           <CartesianGrid vertical={false} stroke={GRID} />
           <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} minTickGap={16} />
