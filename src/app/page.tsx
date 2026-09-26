@@ -1,69 +1,307 @@
-import Image from "next/image";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  BarChart3,
+  Calculator,
+  Check,
+  Clock,
+  Highlighter,
+  Lock,
+  ShieldCheck,
+} from "lucide-react";
+import Link from "next/link";
+import { LogoMark } from "@/components/logo";
+import { SiteHeader } from "@/components/marketing/site-header";
+import { SectionArt } from "@/components/section-art";
+import { ButtonLink } from "@/components/ui/button";
+import { GUEST_DAILY_LIMIT, MEMBER_DAILY_LIMIT, SECTION_META, SECTIONS } from "@/lib/exam/constants";
+import { getCurrentUser } from "@/lib/supabase/server";
+import { SITE_NAME } from "@/lib/utils";
 
-export default function Home() {
+export default async function Home() {
+  const { user } = await getCurrentUser();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="min-h-screen">
+      <SiteHeader signedIn={Boolean(user)} />
+
+      <main className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
+        <Hero signedIn={Boolean(user)} />
+        <Tests />
+        <Features />
+        <Plans signedIn={Boolean(user)} />
       </main>
+
+      <footer className="border-t border-line bg-surface">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm text-muted sm:flex-row sm:px-6">
+          <div className="flex items-center gap-2.5">
+            <LogoMark className="size-7 rounded-lg" />
+            <span className="font-semibold text-ink">{SITE_NAME}</span>
+            <span>· Digital SAT practice</span>
+          </div>
+          <p>SAT is a trademark of the College Board, which is not affiliated with this site.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function Hero({ signedIn }: { signedIn: boolean }) {
+  return (
+    <section className="grid gap-4 pt-8 sm:pt-12 lg:grid-cols-[1.55fr_1fr]">
+      <div className="flex flex-col gap-4">
+        <div className="relative animate-fade-up overflow-hidden rounded-3xl bg-lime p-7 sm:p-10">
+          <Link
+            href={signedIn ? "/dashboard/tests" : "#tests"}
+            className="inline-flex h-11 w-20 items-center justify-end rounded-full p-1 ring-2 ring-ink/10 transition hover:ring-ink/25"
+            aria-label="Browse tests"
+          >
+            <span className="grid size-9 place-items-center rounded-full bg-white shadow-sm">
+              <ArrowUpRight className="size-5" />
+            </span>
+          </Link>
+          <h1 className="mt-6 text-[2.6rem] leading-[1.02] font-extrabold tracking-tight text-ink sm:text-6xl">
+            Boost your
+            <br />
+            SAT confidence
+          </h1>
+          <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-ink/75 sm:text-base">
+            Timed Math, Reading and Writing, and combined practice tests in an interface that
+            works like the real digital SAT, with detailed score analytics after every attempt.
+          </p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <ButtonLink href={signedIn ? "/dashboard/tests" : "#tests"} variant="dark" size="lg">
+              Start a practice test
+              <ArrowRight className="size-4" />
+            </ButtonLink>
+            {!signedIn && (
+              <ButtonLink href="/signup" variant="secondary" size="lg" className="bg-white/70 ring-ink/10">
+                Create free account
+              </ButtonLink>
+            )}
+          </div>
+          <div aria-hidden className="pointer-events-none absolute -right-10 -bottom-16 size-56 rounded-full bg-white/25 blur-2xl" />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-[1.3fr_1fr]">
+          <div className="animate-fade-up rounded-3xl bg-surface p-7 shadow-card [animation-delay:80ms]">
+            <p className="text-2xl leading-snug font-light text-ink-2 sm:text-[1.7rem]">
+              Practice perfect,
+              <br />
+              achieve excellence.
+            </p>
+          </div>
+          <div className="grid animate-fade-up grid-cols-3 gap-2 rounded-3xl bg-surface p-5 shadow-card [animation-delay:140ms]">
+            {[
+              { icon: Clock, label: "Timed" },
+              { icon: Lock, label: "Locked" },
+              { icon: BarChart3, label: "Scored" },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-canvas py-4">
+                <Icon className="size-5 text-brand" />
+                <span className="text-xs font-semibold text-ink-2">{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <ScorePreview />
+    </section>
+  );
+}
+
+function ScorePreview() {
+  const trend = [1080, 1130, 1120, 1190, 1240, 1230, 1310, 1340];
+  const max = 1400;
+  const min = 1000;
+  const points = trend
+    .map((v, i) => `${(i / (trend.length - 1)) * 240 + 10},${90 - ((v - min) / (max - min)) * 80}`)
+    .join(" ");
+
+  return (
+    <div className="relative flex animate-fade-up flex-col overflow-hidden rounded-3xl bg-surface p-3 shadow-card [animation-delay:60ms]">
+      <div className="rounded-[1.4rem] bg-gradient-to-br from-[#1f2468] to-[#2d3494] p-6 text-white">
+        <div className="flex items-center justify-between">
+          <span className="text-2xl font-extrabold tracking-tight">SAT</span>
+          <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">Combined · Test 1</span>
+        </div>
+        <p className="mt-6 text-center text-xs font-bold tracking-[0.14em] text-white/70">TOTAL SCORE</p>
+        <p className="text-center text-6xl font-extrabold tracking-tight">1340</p>
+        <p className="text-center text-xs text-white/60">400–1600</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 p-4">
+        <div className="rounded-2xl bg-english-soft p-4">
+          <p className="text-xs font-semibold text-ink-2">Reading and Writing</p>
+          <p className="mt-1 text-2xl font-extrabold">680</p>
+        </div>
+        <div className="rounded-2xl bg-math-soft p-4">
+          <p className="text-xs font-semibold text-ink-2">Math</p>
+          <p className="mt-1 text-2xl font-extrabold">660</p>
+        </div>
+      </div>
+
+      <div className="mx-4 mb-4 rounded-2xl bg-canvas p-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold">Score trend</p>
+          <span className="rounded-full bg-lime px-2 py-0.5 text-xs font-bold">+260</span>
+        </div>
+        <svg viewBox="0 0 260 100" className="mt-2 h-24 w-full" aria-hidden>
+          <defs>
+            <linearGradient id="trend-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#6c5ce7" stopOpacity="0.25" />
+              <stop offset="1" stopColor="#6c5ce7" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <polygon points={`10,100 ${points} 250,100`} fill="url(#trend-fill)" />
+          <polyline points={points} fill="none" stroke="#6c5ce7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function Tests() {
+  return (
+    <section id="tests" className="scroll-mt-24 pt-24">
+      <SectionHeading
+        eyebrow="Practice tests"
+        title="Three ways to practice"
+        body="Each test runs in a locked, full-screen interface with the same tools you'll see on test day."
+      />
+      <div className="mt-10 grid gap-5 md:grid-cols-3">
+        {SECTIONS.map((section) => {
+          const meta = SECTION_META[section];
+          return (
+            <Link
+              key={section}
+              href={`/exam/${section}`}
+              className="group flex flex-col rounded-3xl bg-surface p-3 shadow-card ring-1 ring-transparent transition hover:-translate-y-1 hover:ring-line"
+            >
+              <SectionArt section={section} className="aspect-[16/10] rounded-[1.3rem]" />
+              <div className="flex flex-1 flex-col p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold">{meta.name}</h3>
+                  <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: meta.soft, color: meta.accent }}>
+                    {meta.scoreRange}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-muted">{meta.description}</p>
+                <div className="mt-5 flex items-center gap-4 border-t border-dashed border-line pt-4 text-sm text-ink-2">
+                  <span>{meta.questions} questions</span>
+                  <span className="size-1 rounded-full bg-line" />
+                  <span>{meta.minutes} min</span>
+                  <span className="ml-auto grid size-9 place-items-center rounded-full bg-canvas transition group-hover:bg-ink group-hover:text-white">
+                    <ArrowUpRight className="size-4" />
+                  </span>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function Features() {
+  const items = [
+    {
+      icon: ShieldCheck,
+      title: "Exam lockdown",
+      body: "Full-screen mode, blocked shortcuts and developer tools, and tab-switch detection keep every attempt honest.",
+    },
+    {
+      icon: Calculator,
+      title: "Built-in tools",
+      body: "Graphing and scientific calculator, math reference sheet, answer eliminator, highlighter and line reader.",
+    },
+    {
+      icon: Highlighter,
+      title: "Real test layout",
+      body: "Split passage view, question navigator, mark for review and a check-your-work page before you submit.",
+    },
+    {
+      icon: BarChart3,
+      title: "Score analytics",
+      body: "Scaled scores, domain breakdowns, timing per question and progress trends saved to your profile.",
+    },
+  ];
+  return (
+    <section id="features" className="scroll-mt-24 pt-24">
+      <SectionHeading eyebrow="Features" title="Everything you need on test day" />
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {items.map(({ icon: Icon, title, body }) => (
+          <div key={title} className="rounded-3xl bg-surface p-6 shadow-card">
+            <span className="grid size-11 place-items-center rounded-2xl bg-brand-soft text-brand">
+              <Icon className="size-5" />
+            </span>
+            <h3 className="mt-5 font-bold">{title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Plans({ signedIn }: { signedIn: boolean }) {
+  return (
+    <section id="plans" className="scroll-mt-24 pt-24">
+      <SectionHeading eyebrow="Plans" title="Free, with a daily rhythm" body="Limits reset every day at 00:00 UTC." />
+      <div className="mx-auto mt-10 grid max-w-4xl gap-5 md:grid-cols-2">
+        <div className="rounded-3xl bg-surface p-8 shadow-card">
+          <p className="text-sm font-semibold text-muted">Guest</p>
+          <p className="mt-2 text-4xl font-extrabold">
+            {GUEST_DAILY_LIMIT} <span className="text-lg font-semibold text-muted">test / day</span>
+          </p>
+          <ul className="mt-6 space-y-3 text-sm text-ink-2">
+            <PlanItem>No sign-up needed</PlanItem>
+            <PlanItem>Full test interface and tools</PlanItem>
+            <PlanItem>Score report right after the test</PlanItem>
+          </ul>
+          <ButtonLink href="#tests" variant="secondary" className="mt-8 w-full">
+            Try a test now
+          </ButtonLink>
+        </div>
+        <div className="relative overflow-hidden rounded-3xl bg-ink p-8 text-white shadow-float">
+          <span className="absolute top-6 right-6 rounded-full bg-lime px-3 py-1 text-xs font-bold text-ink">Recommended</span>
+          <p className="text-sm font-semibold text-white/60">Free account</p>
+          <p className="mt-2 text-4xl font-extrabold">
+            {MEMBER_DAILY_LIMIT} <span className="text-lg font-semibold text-white/60">tests / day</span>
+          </p>
+          <ul className="mt-6 space-y-3 text-sm text-white/85">
+            <PlanItem dark>Every result saved to your profile</PlanItem>
+            <PlanItem dark>Progress charts and domain analytics</PlanItem>
+            <PlanItem dark>Full question review with explanations</PlanItem>
+          </ul>
+          <ButtonLink href={signedIn ? "/dashboard" : "/signup"} variant="lime" className="mt-8 w-full">
+            {signedIn ? "Go to dashboard" : "Create free account"}
+          </ButtonLink>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PlanItem({ children, dark }: { children: React.ReactNode; dark?: boolean }) {
+  return (
+    <li className="flex items-center gap-3">
+      <span className={`grid size-5 place-items-center rounded-full ${dark ? "bg-lime text-ink" : "bg-brand-soft text-brand"}`}>
+        <Check className="size-3" strokeWidth={3} />
+      </span>
+      {children}
+    </li>
+  );
+}
+
+function SectionHeading({ eyebrow, title, body }: { eyebrow: string; title: string; body?: string }) {
+  return (
+    <div className="mx-auto max-w-2xl text-center">
+      <p className="text-sm font-bold tracking-wide text-brand uppercase">{eyebrow}</p>
+      <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">{title}</h2>
+      {body && <p className="mt-4 text-muted">{body}</p>}
     </div>
   );
 }
