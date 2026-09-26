@@ -2,6 +2,7 @@ import { ArrowRight, BookOpenCheck, Calculator, Layers } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionArt } from "@/components/section-art";
 import { getDashboardData, isRunning, type AttemptSummary } from "@/lib/dashboard";
 import { isSection, SECTION_META, SECTIONS } from "@/lib/exam/constants";
@@ -29,15 +30,18 @@ export default async function SectionTestsPage({ params }: PageProps<"/dashboard
   const tests = allTests.filter((t) => t.section === section);
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-extrabold tracking-tight">Tests</h1>
-        {usage && (
-          <p className="text-sm font-semibold text-muted">
-            {usage.unlimited ? "Unlimited" : `${usage.remaining} of ${usage.limit} left today`}
-          </p>
-        )}
-      </div>
+    <div>
+      <PageHeader
+        title="Tests"
+        description="Adaptive mock tests built from official questions. Module 2 adapts to your Module 1 score."
+        action={
+          usage && (
+            <span className="rounded-full bg-surface px-4 py-2 text-sm font-semibold shadow-card ring-1 ring-line">
+              {usage.unlimited ? "Unlimited tests" : `${usage.remaining} of ${usage.limit} left today`}
+            </span>
+          )
+        }
+      />
 
       <nav
         className="no-scrollbar mt-6 flex w-fit max-w-full gap-1 overflow-x-auto rounded-2xl bg-surface p-1.5 shadow-card ring-1 ring-line"
@@ -63,11 +67,7 @@ export default async function SectionTestsPage({ params }: PageProps<"/dashboard
         })}
       </nav>
 
-      <p className="mt-6 text-sm text-muted">
-        Adaptive mock tests built from official questions. Module 2 gets easier or harder depending on your Module 1.
-      </p>
-
-      <ul className="mt-5 grid gap-5 sm:grid-cols-3">
+      <ul className="mt-6 grid gap-5 sm:grid-cols-3">
         {tests.map((test, i) => (
           <MockCard key={test.id} test={test} index={i + 1} attempts={attempts.filter((a) => a.testId === test.id)} />
         ))}
@@ -110,7 +110,11 @@ function MockCard({ test, index, attempts }: { test: TestForm; index: number; at
           <span className="rounded-full px-2 py-0.5 font-semibold" style={{ background: meta.soft, color: meta.accent }}>
             Adaptive
           </span>
-          {active ? "In progress" : done.length ? `Taken ${formatDate(done[0].submittedAt ?? done[0].startedAt)}` : "Not taken yet"}
+          {active
+            ? "In progress"
+            : done.length
+              ? `Taken ${formatDate(done[0].submittedAt ?? done[0].startedAt)}`
+              : "Not taken yet"}
         </p>
         <Link
           href={`/exam/${test.section}?test=${test.id}`}

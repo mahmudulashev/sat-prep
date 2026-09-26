@@ -127,7 +127,7 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
           </div>
         </section>
 
-        <aside className="flex animate-fade-up flex-col gap-4 [animation-delay:80ms]">
+        <aside className="flex animate-fade-up flex-col gap-6 [animation-delay:80ms]">
           <div className="rounded-3xl bg-ink p-7 text-white shadow-float">
             <h2 className="text-xl font-bold">Before you begin</h2>
             <ul className="mt-5 space-y-4 text-sm text-white/80">
@@ -182,7 +182,7 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
           </div>
 
           {usage && (
-            <div className="rounded-3xl bg-surface p-6 shadow-card">
+            <div className="flex flex-1 flex-col rounded-3xl bg-surface p-6 shadow-card">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold">Tests today</p>
                 <p className="text-sm text-muted">

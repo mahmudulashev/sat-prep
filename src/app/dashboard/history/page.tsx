@@ -1,6 +1,7 @@
 import { ArrowUpRight, ShieldAlert } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { DeleteAttemptButton } from "@/components/dashboard/delete-attempt-button";
 import { SectionArt } from "@/components/section-art";
 import { getDashboardData } from "@/lib/dashboard";
@@ -17,8 +18,7 @@ export default async function HistoryPage({ searchParams }: PageProps<"/dashboar
 
   return (
     <div>
-      <h2 className="text-3xl font-extrabold tracking-tight">History</h2>
-      <p className="mt-1 text-muted">Every completed test, with a full score report for each.</p>
+      <PageHeader title="History" description="Every completed test, with a full score report for each." />
 
       <div className="mt-6 flex flex-wrap gap-2">
         <FilterChip href="/dashboard/history" active={!filter} label="All" count={completed.length} />
@@ -76,7 +76,9 @@ export default async function HistoryPage({ searchParams }: PageProps<"/dashboar
                       </span>
                     </Link>
                   </td>
-                  <td className="hidden px-5 py-3.5 whitespace-nowrap text-muted md:table-cell">{formatDate(a.submittedAt ?? a.startedAt)}</td>
+                  <td className="hidden px-5 py-3.5 whitespace-nowrap text-muted md:table-cell">
+                    {formatDate(a.submittedAt ?? a.startedAt)}
+                  </td>
                   <td className="px-3 py-3.5 text-base font-extrabold tabular-nums sm:px-5">{a.score}</td>
                   <td className="hidden px-5 py-3.5 tabular-nums sm:table-cell">{a.englishScore ?? "—"}</td>
                   <td className="hidden px-5 py-3.5 tabular-nums sm:table-cell">{a.mathScore ?? "—"}</td>
@@ -88,7 +90,9 @@ export default async function HistoryPage({ searchParams }: PageProps<"/dashboar
                       <span className="text-xs text-muted tabular-nums">{percent(a.correct, a.total)}%</span>
                     </div>
                   </td>
-                  <td className="hidden px-5 py-3.5 whitespace-nowrap text-muted tabular-nums xl:table-cell">{formatDuration(a.secondsSpent)}</td>
+                  <td className="hidden px-5 py-3.5 whitespace-nowrap text-muted tabular-nums xl:table-cell">
+                    {formatDuration(a.secondsSpent)}
+                  </td>
                   <td className="px-3 py-3.5 sm:px-5">
                     <div className="flex items-center justify-end gap-1">
                       <DeleteAttemptButton attemptId={a.id} title={a.testTitle} score={a.score} />

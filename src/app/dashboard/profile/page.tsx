@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { signOut } from "@/app/(auth)/actions";
 import { ProfileForm } from "@/components/dashboard/profile-form";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ export default async function ProfilePage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-extrabold tracking-tight">Profile</h1>
+      <PageHeader title="Profile" description="Your name, target score and test date." />
       <div className="mt-6 grid gap-6 lg:grid-cols-[20rem_1fr]">
         <aside className="h-fit rounded-3xl bg-surface p-6 text-center shadow-card">
           <span className="mx-auto grid size-20 place-items-center rounded-full bg-gradient-to-br from-[#8b7bff] to-brand text-2xl font-extrabold text-white">
