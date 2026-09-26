@@ -10,12 +10,22 @@ function keyboardApi() {
   return (navigator as Navigator & { keyboard?: KeyboardLock }).keyboard;
 }
 
+/**
+ * Entering full screen briefly reports the page as hidden/blurred on some
+ * platforms (macOS moves the window to a new Space). Focus and visibility
+ * events are ignored until this time so they aren't counted as violations.
+ */
+let transitionUntil = 0;
+const TRANSITION_MS = 3000;
+const TRANSITION_SENSITIVE: ViolationType[] = ["tab-hidden", "window-blur", "devtools"];
+
 /** Resolves false if the browser never answers (some embedded browsers don't). */
 function withTimeout<T>(promise: Promise<T> | undefined, ms: number) {
   return Promise.race([promise, new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), ms))]);
 }
 
 export async function enterFullscreen() {
+  transitionUntil = Date.now() + TRANSITION_MS;
   try {
     if (!document.fullscreenElement) {
       await withTimeout(document.documentElement.requestFullscreen({ navigationUI: "hide" }), 2500);
@@ -25,6 +35,7 @@ export async function enterFullscreen() {
   } catch {
     // Handled below.
   }
+  transitionUntil = Date.now() + TRANSITION_MS;
   return Boolean(document.fullscreenElement);
 }
 
@@ -79,8 +90,9 @@ export function useLockdown({ active, initial = [], maxStrikes, onLimitReached }
   const strikes = violations.filter((v) => STRIKE_TYPES.includes(v.type)).length;
 
   const record = useCallback((type: ViolationType, detail?: string) => {
-    // Collapse bursts of the same event (e.g. blur + hidden on one tab switch).
     const now = Date.now();
+    if (now < transitionUntil && TRANSITION_SENSITIVE.includes(type)) return;
+    // Collapse bursts of the same event (e.g. blur + hidden on one tab switch).
     if (now - (lastRef.current[type] ?? 0) < 1500) return;
     lastRef.current[type] = now;
 
