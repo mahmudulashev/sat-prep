@@ -50,8 +50,8 @@ export default async function HistoryPage({ searchParams }: PageProps<"/dashboar
                 <th className="px-5 py-4 font-semibold">Score</th>
                 <th className="hidden px-5 py-4 font-semibold sm:table-cell">R&amp;W</th>
                 <th className="hidden px-5 py-4 font-semibold sm:table-cell">Math</th>
-                <th className="hidden px-5 py-4 font-semibold lg:table-cell">Accuracy</th>
-                <th className="hidden px-5 py-4 font-semibold lg:table-cell">Time</th>
+                <th className="hidden px-5 py-4 font-semibold xl:table-cell">Accuracy</th>
+                <th className="hidden px-5 py-4 font-semibold xl:table-cell">Time</th>
                 <th className="w-24 px-3 py-4 sm:px-5">
                   <span className="sr-only">Actions</span>
                 </th>
@@ -76,11 +76,11 @@ export default async function HistoryPage({ searchParams }: PageProps<"/dashboar
                       </span>
                     </Link>
                   </td>
-                  <td className="hidden px-5 py-3.5 text-muted md:table-cell">{formatDate(a.submittedAt ?? a.startedAt)}</td>
+                  <td className="hidden px-5 py-3.5 whitespace-nowrap text-muted md:table-cell">{formatDate(a.submittedAt ?? a.startedAt)}</td>
                   <td className="px-3 py-3.5 text-base font-extrabold tabular-nums sm:px-5">{a.score}</td>
                   <td className="hidden px-5 py-3.5 tabular-nums sm:table-cell">{a.englishScore ?? "—"}</td>
                   <td className="hidden px-5 py-3.5 tabular-nums sm:table-cell">{a.mathScore ?? "—"}</td>
-                  <td className="hidden px-5 py-3.5 lg:table-cell">
+                  <td className="hidden px-5 py-3.5 xl:table-cell">
                     <div className="flex items-center gap-2">
                       <div className="h-1.5 w-20 rounded-full bg-line">
                         <div className="h-full rounded-full bg-brand" style={{ width: `${percent(a.correct, a.total)}%` }} />
@@ -88,7 +88,7 @@ export default async function HistoryPage({ searchParams }: PageProps<"/dashboar
                       <span className="text-xs text-muted tabular-nums">{percent(a.correct, a.total)}%</span>
                     </div>
                   </td>
-                  <td className="hidden px-5 py-3.5 text-muted tabular-nums lg:table-cell">{formatDuration(a.secondsSpent)}</td>
+                  <td className="hidden px-5 py-3.5 whitespace-nowrap text-muted tabular-nums xl:table-cell">{formatDuration(a.secondsSpent)}</td>
                   <td className="px-3 py-3.5 sm:px-5">
                     <div className="flex items-center justify-end gap-1">
                       <DeleteAttemptButton attemptId={a.id} title={a.testTitle} score={a.score} />

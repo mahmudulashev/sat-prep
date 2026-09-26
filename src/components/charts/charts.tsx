@@ -34,7 +34,18 @@ const INK = "#11132a";
 const MUTED = "#6b7089";
 const GRID = "#ebebf3";
 const NEUTRAL = "#d5d6e2";
-const AXIS_TICK = { fill: MUTED, fontSize: 12 };
+const AXIS_TICK = { fill: MUTED, fontSize: "0.75rem" };
+
+/** Chart area sized in rem (from a px height at the default text size), so charts grow with the page. */
+function ChartBox({ height, children }: { height: number; children: React.ReactElement }) {
+  return (
+    <div style={{ height: `${height / 16}rem` }}>
+      <ResponsiveContainer width="100%" height="100%">
+        {children}
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 function TooltipCard({ title, rows }: { title?: string; rows: { label: string; value: string; color?: string }[] }) {
   return (
@@ -79,7 +90,7 @@ export function DomainBars({ data }: { data: DomainDatum[] }) {
           <Legend items={subjects.map((s) => ({ label: SUBJECT_LABEL[s], color: SUBJECT_COLOR[s] }))} />
         </div>
       )}
-      <ResponsiveContainer width="100%" height={Math.max(160, rows.length * 44)}>
+      <ChartBox height={Math.max(160, rows.length * 44)}>
         <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 44, bottom: 0, left: 0 }} barCategoryGap={12}>
           <CartesianGrid horizontal={false} stroke={GRID} />
           <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={(v) => `${v}%`} tick={AXIS_TICK} axisLine={false} tickLine={false} />
@@ -104,10 +115,10 @@ export function DomainBars({ data }: { data: DomainDatum[] }) {
             {rows.map((r) => (
               <Cell key={r.domain} fill={SUBJECT_COLOR[r.subject]} />
             ))}
-            <LabelList dataKey="pct" position="right" formatter={(v) => `${v}%`} style={{ fill: INK, fontSize: 12, fontWeight: 600 }} />
+            <LabelList dataKey="pct" position="right" formatter={(v) => `${v}%`} style={{ fill: INK, fontSize: "0.75rem", fontWeight: 600 }} />
           </Bar>
         </BarChart>
-      </ResponsiveContainer>
+      </ChartBox>
     </div>
   );
 }
@@ -121,10 +132,10 @@ export function SkillRadar({ data, color = "#6c5ce7" }: { data: DomainDatum[]; c
     total: d.total,
   }));
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ChartBox height={280}>
       <RadarChart data={rows} outerRadius="72%">
         <PolarGrid stroke={GRID} />
-        <PolarAngleAxis dataKey="domain" tick={{ fill: INK, fontSize: 11.5 }} />
+        <PolarAngleAxis dataKey="domain" tick={{ fill: INK, fontSize: "0.72rem" }} />
         <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
         <Tooltip
           content={({ active, payload }) => {
@@ -135,7 +146,7 @@ export function SkillRadar({ data, color = "#6c5ce7" }: { data: DomainDatum[]; c
         />
         <Radar dataKey="pct" stroke={color} strokeWidth={2} fill={color} fillOpacity={0.12} dot={{ r: 4, fill: color, stroke: "#fff", strokeWidth: 2 }} />
       </RadarChart>
-    </ResponsiveContainer>
+    </ChartBox>
   );
 }
 
@@ -144,7 +155,7 @@ export type DifficultyDatum = { level: string; correct: number; total: number };
 export function DifficultyColumns({ data }: { data: DifficultyDatum[] }) {
   const rows = data.map((d) => ({ ...d, pct: d.total ? Math.round((d.correct / d.total) * 100) : 0 }));
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ChartBox height={220}>
       <BarChart data={rows} margin={{ top: 22, right: 8, bottom: 0, left: -18 }}>
         <CartesianGrid vertical={false} stroke={GRID} />
         <XAxis dataKey="level" tick={{ ...AXIS_TICK, fill: INK }} axisLine={false} tickLine={false} />
@@ -158,10 +169,10 @@ export function DifficultyColumns({ data }: { data: DifficultyDatum[] }) {
           }}
         />
         <Bar dataKey="pct" fill="#6c5ce7" radius={[4, 4, 0, 0]} maxBarSize={24}>
-          <LabelList dataKey="pct" position="top" formatter={(v) => `${v}%`} style={{ fill: INK, fontSize: 12, fontWeight: 600 }} />
+          <LabelList dataKey="pct" position="top" formatter={(v) => `${v}%`} style={{ fill: INK, fontSize: "0.75rem", fontWeight: 600 }} />
         </Bar>
       </BarChart>
-    </ResponsiveContainer>
+    </ChartBox>
   );
 }
 
@@ -183,7 +194,7 @@ export function TimingBars({ data }: { data: TimingDatum[] }) {
           ]}
         />
       </div>
-      <ResponsiveContainer width="100%" height={200}>
+      <ChartBox height={200}>
         <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }} barCategoryGap={2}>
           <CartesianGrid vertical={false} stroke={GRID} />
           <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={8} />
@@ -214,7 +225,7 @@ export function TimingBars({ data }: { data: TimingDatum[] }) {
             ))}
           </Bar>
         </BarChart>
-      </ResponsiveContainer>
+      </ChartBox>
     </div>
   );
 }
@@ -236,7 +247,7 @@ export function ScoreTrend({ data }: { data: TrendDatum[] }) {
           <Legend items={series.map((s) => ({ label: s.label, color: s.color }))} />
         </div>
       )}
-      <ResponsiveContainer width="100%" height={250}>
+      <ChartBox height={250}>
         <LineChart data={data} margin={{ top: 10, right: 16, bottom: 0, left: -8 }}>
           <CartesianGrid vertical={false} stroke={GRID} />
           <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} minTickGap={16} />
@@ -272,7 +283,7 @@ export function ScoreTrend({ data }: { data: TrendDatum[] }) {
             />
           ))}
         </LineChart>
-      </ResponsiveContainer>
+      </ChartBox>
     </div>
   );
 }
@@ -282,11 +293,11 @@ export function Sparkline({ values, color = "#6c5ce7" }: { values: number[]; col
   if (values.length < 2) return <div className="h-10" />;
   const data = values.map((v, i) => ({ i, v }));
   return (
-    <ResponsiveContainer width="100%" height={40}>
+    <ChartBox height={40}>
       <LineChart data={data} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
         <YAxis hide domain={["dataMin", "dataMax"]} />
         <Line type="monotone" dataKey="v" stroke={color} strokeWidth={2} dot={false} isAnimationActive={false} />
       </LineChart>
-    </ResponsiveContainer>
+    </ChartBox>
   );
 }

@@ -88,7 +88,7 @@ function Field({ label, ...props }: React.ComponentProps<"input"> & { label: str
       <span className="mb-1.5 block text-sm font-semibold text-ink-2">{label}</span>
       <input
         required
-        className="h-12 w-full rounded-2xl border border-line bg-surface px-4 text-[15px] transition outline-none placeholder:text-muted/60 focus:border-brand focus:ring-4 focus:ring-brand/12"
+        className="h-12 w-full rounded-2xl border border-line bg-surface px-4 text-[0.9375rem] transition outline-none placeholder:text-muted/60 focus:border-brand focus:ring-4 focus:ring-brand/12"
         {...props}
       />
     </label>

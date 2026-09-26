@@ -51,7 +51,7 @@ export function ProfileForm({ fullName, targetScore, testDate }: Props) {
 }
 
 const inputClass =
-  "h-12 w-full rounded-2xl border border-line bg-surface px-4 text-[15px] outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/12";
+  "h-12 w-full rounded-2xl border border-line bg-surface px-4 text-[0.9375rem] outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/12";
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (

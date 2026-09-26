@@ -197,8 +197,8 @@ function StatCard({
         <p className="text-sm font-semibold">{title}</p>
       </div>
       <div className="flex items-end justify-between gap-3 px-5 pt-3 pb-4">
-        <p className="text-3xl font-extrabold tracking-tight tabular-nums">{value}</p>
-        <div className="w-24">
+        <p className="text-3xl font-extrabold tracking-tight whitespace-nowrap tabular-nums">{value}</p>
+        <div className="w-24 min-w-0 shrink">
           <Sparkline values={spark} color={sparkColor} />
         </div>
       </div>

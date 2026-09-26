@@ -64,7 +64,7 @@ export default async function ResultPage({ params }: PageProps<"/results/[id]">)
   const weakest = [...domains].sort((a, b) => a.correct / a.total - b.correct / b.total)[0];
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-20" data-page-scale="app">
       <header className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo />
         <Link
@@ -88,7 +88,7 @@ export default async function ResultPage({ params }: PageProps<"/results/[id]">)
           </div>
         )}
 
-        <section className="grid gap-5 lg:grid-cols-[380px_1fr]">
+        <section className="grid gap-5 lg:grid-cols-[23.75rem_1fr]">
           {/* Score card, modeled on the official practice score report */}
           <div className="overflow-hidden rounded-3xl bg-surface shadow-card">
             <div className="bg-[#1f2a5c] px-6 pt-5 pb-4 text-white">
@@ -98,7 +98,7 @@ export default async function ResultPage({ params }: PageProps<"/results/[id]">)
               </div>
             </div>
             <div className="flex items-center justify-between bg-[#2b3a7a] px-6 py-2 text-sm font-bold text-white">
-              <span className="uppercase">{meta.examTitle}</span>
+              <span className="whitespace-nowrap uppercase">{meta.examTitle}</span>
               <span className="truncate pl-4 text-xs font-semibold text-white/75">{result.title}</span>
             </div>
             <div className="bg-[#f3f6fc] py-7 text-center">

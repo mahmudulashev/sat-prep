@@ -46,9 +46,9 @@ export default async function Home() {
 
 function Hero({ signedIn }: { signedIn: boolean }) {
   return (
-    <section className="grid gap-4 pt-8 sm:pt-12 lg:grid-cols-[1.55fr_1fr]">
+    <section className="grid gap-4 pt-8 sm:pt-12 short:pt-6 lg:grid-cols-[1.55fr_1fr]">
       <div className="flex flex-col gap-4">
-        <div className="relative animate-fade-up overflow-hidden rounded-3xl bg-lime p-7 sm:p-10">
+        <div className="relative animate-fade-up overflow-hidden rounded-3xl bg-lime p-7 sm:p-10 short:py-8">
           <Link
             href={signedIn ? "/dashboard/tests" : "#tests"}
             className="inline-flex h-11 w-20 items-center justify-end rounded-full p-1 ring-2 ring-ink/10 transition hover:ring-ink/25"
@@ -58,16 +58,16 @@ function Hero({ signedIn }: { signedIn: boolean }) {
               <ArrowUpRight className="size-5" />
             </span>
           </Link>
-          <h1 className="mt-6 text-[2.6rem] leading-[1.02] font-extrabold tracking-tight text-ink sm:text-6xl">
+          <h1 className="mt-6 text-[2.6rem] leading-[1.02] font-extrabold tracking-tight text-ink sm:text-6xl short:mt-4 short:text-[3.25rem]">
             Boost your
             <br />
             SAT confidence
           </h1>
-          <p className="mt-5 max-w-xl text-[0.9375rem] leading-relaxed text-ink/75 sm:text-base">
+          <p className="mt-5 max-w-xl text-[0.9375rem] short:mt-4 leading-relaxed text-ink/75 sm:text-base">
             Timed Math, Reading and Writing, and combined practice tests in an interface that
             works like the real digital SAT, with detailed score analytics after every attempt.
           </p>
-          <div className="mt-7 flex flex-wrap gap-3">
+          <div className="mt-7 flex flex-wrap gap-3 short:mt-6">
             <ButtonLink href={signedIn ? "/dashboard/tests" : "#tests"} variant="dark" size="lg">
               Start a practice test
               <ArrowRight className="size-4" />
@@ -82,7 +82,7 @@ function Hero({ signedIn }: { signedIn: boolean }) {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-[1.3fr_1fr]">
-          <div className="animate-fade-up rounded-3xl bg-surface p-7 shadow-card [animation-delay:80ms]">
+          <div className="animate-fade-up rounded-3xl bg-surface p-7 shadow-card [animation-delay:80ms] short:py-5">
             <p className="text-2xl leading-snug font-light text-ink-2 sm:text-[1.7rem]">
               Practice perfect,
               <br />
@@ -124,7 +124,7 @@ function ScorePreview() {
           <span className="text-2xl font-extrabold tracking-tight">SAT</span>
           <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">Combined · Test 1</span>
         </div>
-        <p className="mt-6 text-center text-xs font-bold tracking-[0.14em] text-white/70">TOTAL SCORE</p>
+        <p className="mt-6 text-center text-xs font-bold tracking-[0.14em] text-white/70 short:mt-4">TOTAL SCORE</p>
         <p className="text-center text-6xl font-extrabold tracking-tight">1340</p>
         <p className="text-center text-xs text-white/60">400–1600</p>
       </div>
@@ -140,12 +140,12 @@ function ScorePreview() {
         </div>
       </div>
 
-      <div className="mx-4 mb-4 rounded-2xl bg-canvas p-4">
+      <div className="mx-4 mb-4 flex flex-1 flex-col rounded-2xl bg-canvas p-4">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold">Score trend</p>
           <span className="rounded-full bg-lime px-2 py-0.5 text-xs font-bold">+260</span>
         </div>
-        <svg viewBox="0 0 260 100" className="mt-2 h-24 w-full" aria-hidden>
+        <svg viewBox="0 0 260 100" preserveAspectRatio="none" className="mt-2 min-h-24 w-full flex-1" aria-hidden>
           <defs>
             <linearGradient id="trend-fill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="#6c5ce7" stopOpacity="0.25" />
@@ -153,7 +153,7 @@ function ScorePreview() {
             </linearGradient>
           </defs>
           <polygon points={`10,100 ${points} 250,100`} fill="url(#trend-fill)" />
-          <polyline points={points} fill="none" stroke="#6c5ce7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline points={points} fill="none" stroke="#6c5ce7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         </svg>
       </div>
     </div>

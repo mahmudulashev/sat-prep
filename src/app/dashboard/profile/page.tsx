@@ -12,7 +12,7 @@ export default async function ProfilePage() {
   const best = Math.max(0, ...completed.filter((a) => a.section === "general").map((a) => a.score ?? 0));
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+    <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
       <aside className="h-fit rounded-3xl bg-surface p-6 text-center shadow-card">
         <span className="mx-auto grid size-20 place-items-center rounded-full bg-gradient-to-br from-[#8b7bff] to-brand text-2xl font-extrabold text-white">
           {initials(name)}

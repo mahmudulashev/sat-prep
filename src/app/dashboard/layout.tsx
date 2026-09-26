@@ -12,11 +12,11 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const daysLeft = testDate ? daysUntil(testDate) : null;
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen" data-page-scale="app">
       <Sidebar />
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-xl">
-          <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-4 sm:px-8">
+          <div className="mx-auto flex h-20 max-w-6xl min-[1800px]:max-w-7xl items-center justify-between gap-4 px-4 sm:px-8">
             <div className="flex min-w-0 items-center gap-3">
               <LogoMark className="lg:hidden" />
               <div className="min-w-0">
@@ -51,11 +51,11 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
               </span>
             </Link>
           </div>
-          <div className="mx-auto max-w-6xl px-4 pb-3 sm:px-8 lg:hidden">
+          <div className="mx-auto max-w-6xl min-[1800px]:max-w-7xl px-4 pb-3 sm:px-8 lg:hidden">
             <MobileNav />
           </div>
         </header>
-        <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8">{children}</main>
+        <main className="mx-auto max-w-6xl min-[1800px]:max-w-7xl px-4 py-8 sm:px-8">{children}</main>
       </div>
     </div>
   );

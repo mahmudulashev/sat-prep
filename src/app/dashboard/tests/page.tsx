@@ -57,7 +57,7 @@ function SectionBlock({ section, tests, attempts }: { section: Section; tests: T
   const best = Math.max(0, ...done.map((a) => a.score ?? 0));
 
   return (
-    <section className="grid overflow-hidden rounded-3xl bg-surface shadow-card lg:grid-cols-[300px_1fr]">
+    <section className="grid overflow-hidden rounded-3xl bg-surface shadow-card lg:grid-cols-[18.75rem_1fr]">
       <div className="flex flex-col p-3">
         <SectionArt section={section} className="aspect-[16/10] rounded-[1.3rem]" />
         <div className="flex flex-1 flex-col px-3 pt-4 pb-3">
@@ -118,7 +118,7 @@ function TestRow({ test, attempts }: { test: TestForm; attempts: AttemptSummary[
           <h4 className="font-bold">{test.title}</h4>
           <span
             className={cn(
-              "rounded-full border px-2 py-px text-[11px] font-bold",
+              "rounded-full border px-2 py-px text-[0.6875rem] font-bold",
               status === "In progress" && "border-general/40 bg-general-soft text-[#b86e00]",
               status === "Completed" && "border-english/40 bg-english-soft text-[#0b8577]",
               status === "New" && "border-brand/30 bg-brand-soft text-brand",

@@ -73,7 +73,7 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
   if (attempt) return <ExamRunner initial={attempt} studentName={studentName} />;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" data-page-scale="app">
       <header className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo />
         <Link href={signedIn ? "/dashboard/tests" : "/#tests"} className="flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-ink">
@@ -83,7 +83,7 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
 
       <main className="mx-auto grid max-w-6xl gap-6 px-4 pt-4 pb-16 sm:px-6 lg:grid-cols-[1.25fr_1fr]">
         <section className="animate-fade-up rounded-3xl bg-surface p-3 shadow-card">
-          <SectionArt section={test.section} className="aspect-[16/7] rounded-[1.4rem]" />
+          <SectionArt section={test.section} className="aspect-[16/7] rounded-[1.4rem] short:aspect-[16/5]" />
           <div className="p-5 sm:p-7">
             <span className="rounded-full px-3 py-1 text-xs font-bold" style={{ background: meta.soft, color: meta.accent }}>
               {meta.name} · {meta.scoreRange}

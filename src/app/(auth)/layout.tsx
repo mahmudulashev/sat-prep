@@ -4,7 +4,7 @@ import { GUEST_DAILY_LIMIT, MEMBER_DAILY_LIMIT } from "@/lib/exam/constants";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid min-h-screen lg:grid-cols-[1fr_1.05fr]">
+    <div className="grid min-h-screen lg:grid-cols-[1fr_1.05fr]" data-page-scale="app">
       <div className="flex flex-col px-5 py-6 sm:px-10">
         <Logo />
         <div className="flex flex-1 items-center justify-center py-10">

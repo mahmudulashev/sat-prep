@@ -138,7 +138,7 @@ function ReviewRow({ item, number, open, onToggle }: { item: ResultItem; number:
       {open && (
         <tr className="border-t border-line bg-[#fbfbfe]">
           <td colSpan={7} className="px-4 py-6 sm:px-8">
-            <div className="grid gap-8 font-serif text-[15.5px] leading-relaxed text-bb-ink lg:grid-cols-2">
+            <div className="grid gap-8 font-serif text-[0.97rem] leading-relaxed text-bb-ink lg:grid-cols-2">
               {item.stimulus.length > 0 && <StimulusBlocks blocks={item.stimulus} />}
               <div className={cn(item.stimulus.length === 0 && "lg:col-span-2")}>
                 <Rich text={item.prompt} />
