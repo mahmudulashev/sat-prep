@@ -144,11 +144,21 @@ export function useLockdown({ active, initial = [], maxStrikes, onLimitReached }
 
     const onDragStart = (e: DragEvent) => e.preventDefault();
 
-    // Docked developer tools shrink the viewport relative to the window.
+    // Docked developer tools shrink the viewport while the page stays in full
+    // screen. Sizes are compared in device pixels (CSS px × devicePixelRatio),
+    // which browser zoom leaves unchanged, so zooming in on a large monitor is
+    // never mistaken for developer tools.
+    let baseline: { w: number; h: number } | null = null;
     const devtoolsTimer = window.setInterval(() => {
-      const gapW = window.outerWidth - window.innerWidth;
-      const gapH = window.outerHeight - window.innerHeight;
-      if (document.fullscreenElement && (gapW > 200 || gapH > 250)) record("devtools");
+      if (!document.fullscreenElement || Date.now() < transitionUntil) {
+        baseline = null;
+        return;
+      }
+      const w = window.innerWidth * window.devicePixelRatio;
+      const h = window.innerHeight * window.devicePixelRatio;
+      if (!baseline) baseline = { w, h };
+      else if (w < baseline.w * 0.85 || h < baseline.h * 0.8) record("devtools");
+      else baseline = { w: Math.max(w, baseline.w), h: Math.max(h, baseline.h) };
     }, 1500);
 
     // In production, pause execution whenever developer tools are open: a
