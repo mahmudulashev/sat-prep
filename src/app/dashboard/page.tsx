@@ -2,6 +2,7 @@ import { ArrowUpRight, BookOpenCheck, Clock, Target, Trophy } from "lucide-react
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DomainBars, ScoreTrend, Sparkline } from "@/components/charts/charts";
+import { GreetingHeader } from "@/components/dashboard/greeting-header";
 import { SectionArt } from "@/components/section-art";
 import { ButtonLink } from "@/components/ui/button";
 import { aggregateDomains, getDashboardData, isRunning, type AttemptSummary } from "@/lib/dashboard";
@@ -19,6 +20,7 @@ export default async function DashboardPage() {
   if (!completed.length) {
     return (
       <div className="space-y-6">
+        <GreetingHeader />
         {inProgress && <ResumeBanner attempt={inProgress} />}
         <div className="rounded-3xl bg-surface p-8 shadow-card sm:p-10">
           <p className="text-sm font-bold tracking-wide text-brand uppercase">Let&apos;s get started</p>
@@ -66,6 +68,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <GreetingHeader />
       {inProgress && <ResumeBanner attempt={inProgress} />}
 
       <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
