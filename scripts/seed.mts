@@ -70,6 +70,8 @@ const forms = tests.map((t) => ({
   title: t.title,
   description: t.description,
   sort: t.sort,
+  // The hand-written tests are kept for past results but no longer listed.
+  listed: false,
   modules: t.modules.map((m) => ({
     title: m.title,
     subject: m.subject,

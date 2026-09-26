@@ -1251,6 +1251,150 @@ def adaptive_forms(bank: list[dict]) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# Adaptive mock tests in the digital SAT format
+# ---------------------------------------------------------------------------
+
+RW_SKILL_ORDER = [
+    "Words in Context",
+    "Text Structure and Purpose",
+    "Cross-Text Connections",
+    "Central Ideas and Details",
+    "Command of Evidence (Textual)",
+    "Command of Evidence (Quantitative)",
+    "Inferences",
+    "Boundaries",
+    "Form, Structure, and Sense",
+    "Transitions",
+    "Rhetorical Synthesis",
+]
+LEVEL = {"easy": 0.2, "medium": 0.5, "hard": 0.85}
+
+# Which book each mock draws from; no question appears in two mocks.
+MOCKS = {
+    "math": [4, 5, 6],
+    "english": [7, 8, 10],
+    "full": [(4, 7), (5, 8), (6, 10)],  # (Reading and Writing book, Math book)
+}
+
+
+def mock_forms(questions: list[dict], bank: list[dict]) -> list[dict]:
+    """Digital-format adaptive mocks. Module 1 is drawn from an official
+    practice test; Module 2 has an easier version (more of that test plus easy
+    and medium question bank items) and a harder one (the test's harder items
+    plus hard question bank items)."""
+    by_id = {q["id"]: q for q in questions}
+
+    def book(n: int, subject: str) -> list[dict]:
+        prefix = f"pt{n}-{'rw' if subject == 'english' else 'm'}"
+        return [q for q in questions if q["id"].startswith(prefix)]
+
+    pools = {
+        (s, lvl): sorted((q for q in bank if q["subject"] == s and q["difficulty"] in lvl), key=lambda q: q["id"])
+        for s in ("english", "math")
+        for lvl in (("easy", "medium"), ("hard",))
+    }
+
+    def take_bank(subject: str, levels: tuple, n: int) -> list[dict]:
+        pool = pools[(subject, levels)]
+        # Spread across domains.
+        chosen: list[dict] = []
+        domains = sorted({q["domain"] for q in pool})
+        while len(chosen) < n and pool:
+            for d in domains:
+                match = next((q for q in pool if q["domain"] == d), None)
+                if match and len(chosen) < n:
+                    chosen.append(match)
+                    pool.remove(match)
+        if len(chosen) < n:
+            raise RuntimeError(f"Not enough {subject} {levels} question bank items")
+        return chosen
+
+    def difficulty(q: dict) -> float:
+        if q["id"].startswith("pt") and q["subject"] == "math":
+            return (int(q["id"].rsplit("-", 1)[1]) - 1) / 26
+        return LEVEL[q["difficulty"]]
+
+    def ordered(subject: str, items: list[dict]) -> list[str]:
+        if subject == "english":
+            key = lambda q: (RW_SKILL_ORDER.index(q["skill"]) if q["skill"] in RW_SKILL_ORDER else 99, difficulty(q))
+        else:
+            key = difficulty
+        return [q["id"] for q in sorted(items, key=key)]
+
+    def spread(items: list[dict], n: int) -> tuple[list[dict], list[dict]]:
+        """Picks n items evenly across a list, returning (picked, rest)."""
+        step = len(items) / n
+        idx = {int(i * step + step / 2) for i in range(n)}
+        return [q for i, q in enumerate(items) if i in idx], [q for i, q in enumerate(items) if i not in idx]
+
+    def section(subject: str, n: int) -> tuple[list[str], dict]:
+        items = book(n, subject)
+        if subject == "english":
+            size, lower_book, upper_book, lower_bank, upper_bank = 27, 19, 17, 8, 10
+            # Keep the official mix of question types in Module 1.
+            items = sorted(items, key=lambda q: (RW_SKILL_ORDER.index(q["skill"]) if q["skill"] in RW_SKILL_ORDER else 99, q["id"]))
+        else:
+            size, lower_book, upper_book, lower_bank, upper_bank = 22, 16, 12, 6, 10
+            items = sorted(items, key=difficulty)
+        m1, rest = spread(items, size)
+        rest = sorted(rest, key=difficulty)
+        if subject == "english":
+            lower = rest[:lower_book]
+            upper = rest[len(rest) - upper_book :]
+        else:
+            lower = rest[:lower_book]
+            upper = rest[-upper_book:]
+        lower = lower + take_bank(subject, ("easy", "medium"), lower_bank)
+        upper = upper + take_bank(subject, ("hard",), upper_bank)
+        assert len(m1) == size and len(lower) == size and len(upper) == size
+        return ordered(subject, m1), {"from": 0, "threshold": 0.6, "lower": ordered(subject, lower), "upper": ordered(subject, upper)}
+
+    def modules(subject: str, n: int, from_index: int = 0, break_before: int = 0) -> list[dict]:
+        m1, adaptive = section(subject, n)
+        adaptive["from"] = from_index
+        label, minutes = ("Reading and Writing", 32) if subject == "english" else ("Math", 35)
+        base = {"title": label, "subject": subject, "duration_seconds": minutes * 60}
+        return [
+            {**base, "break_seconds": break_before, "question_ids": m1},
+            {**base, "break_seconds": 0, "question_ids": [], "adaptive": adaptive},
+        ]
+
+    forms: list[dict] = []
+    for i, n in enumerate(MOCKS["math"], 1):
+        forms.append({
+            "id": f"mock-math-{i}", "section": "math", "title": f"Math Mock Test {i}", "sort": i, "listed": True,
+            "description": "Two adaptive 35-minute modules of 22 questions, built from official practice test questions.",
+            "modules": modules("math", n),
+        })
+    for i, n in enumerate(MOCKS["english"], 1):
+        forms.append({
+            "id": f"mock-english-{i}", "section": "english", "title": f"Reading and Writing Mock Test {i}", "sort": i, "listed": True,
+            "description": "Two adaptive 32-minute modules of 27 questions, built from official practice test questions.",
+            "modules": modules("english", n),
+        })
+    for i, (rw, m) in enumerate(MOCKS["full"], 1):
+        forms.append({
+            "id": f"mock-full-{i}", "section": "general", "title": f"Full-Length Mock Test {i}", "sort": i, "listed": True,
+            "description": "The complete adaptive digital SAT: Reading and Writing, a 10-minute break, then Math. Scored 400-1600.",
+            "modules": modules("english", rw) + modules("math", m, from_index=2, break_before=600),
+        })
+
+    used = [qid for f in forms for m in f["modules"] for qid in m["question_ids"] + m.get("adaptive", {}).get("lower", []) + m.get("adaptive", {}).get("upper", [])]
+    per_form = {}
+    for f in forms:
+        ids = {qid for m in f["modules"] for qid in m["question_ids"] + m.get("adaptive", {}).get("lower", []) + m.get("adaptive", {}).get("upper", [])}
+        per_form[f["id"]] = ids
+    all_ids = [qid for ids in per_form.values() for qid in ids]
+    if len(all_ids) != len(set(all_ids)):
+        raise RuntimeError("A question appears in more than one mock")
+    missing = [qid for qid in used if qid not in by_id]
+    if missing:
+        raise RuntimeError(f"Unknown questions {missing[:3]}")
+    print(f"Mocks: {len(forms)} tests using {len(set(all_ids))} distinct questions")
+    return forms
+
+
 def main() -> None:
     store = AssetStore()
     questions: list[dict] = []
@@ -1273,7 +1417,9 @@ def main() -> None:
         print(f"Question bank {name}: {len(items)} questions")
         bank += items
     questions += bank
-    forms += adaptive_forms(bank)
+    # Only the adaptive mocks are listed; other forms stay unlisted.
+    forms = [{**f, "listed": False} for f in forms + adaptive_forms(bank)]
+    forms += mock_forms(questions, bank)
 
     ids = [q["id"] for q in questions]
     if len(ids) != len(set(ids)):

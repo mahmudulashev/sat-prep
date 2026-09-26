@@ -137,7 +137,9 @@ export type Database = {
           created_at: string;
           description: string;
           id: string;
+          listed: boolean;
           modules: Json;
+          score_table: Json | null;
           section: Database["public"]["Enums"]["exam_section"];
           sort: number;
           title: string;
@@ -147,7 +149,9 @@ export type Database = {
           created_at?: string;
           description: string;
           id: string;
+          listed?: boolean;
           modules: Json;
+          score_table?: Json | null;
           section: Database["public"]["Enums"]["exam_section"];
           sort?: number;
           title: string;

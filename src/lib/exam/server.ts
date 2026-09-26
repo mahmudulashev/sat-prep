@@ -113,6 +113,7 @@ export async function listTests(): Promise<TestForm[]> {
   const { data, error } = await supabase
     .from("test_forms")
     .select("id, section, title, description, modules, sort")
+    .eq("listed", true)
     .order("sort");
   if (error) throw toExamError(error);
   return data as unknown as TestForm[];
