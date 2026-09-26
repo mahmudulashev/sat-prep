@@ -78,14 +78,34 @@ export type ViolationType =
 
 export type Violation = { type: ViolationType; at: string; detail?: string };
 
+export type ModuleSummary = {
+  title: string;
+  subject: Subject;
+  duration_seconds: number;
+  question_count: number;
+};
+
+export type TestForm = {
+  id: string;
+  section: Section;
+  title: string;
+  description: string;
+  modules: { title: string; subject: Subject; duration_seconds: number; question_ids: string[] }[];
+  sort: number;
+};
+
 export type AttemptPayload = {
   attempt_id: string;
+  test_id: string;
   section: Section;
   title: string;
   status: "in_progress";
   started_at: string;
   deadline: string;
   server_now: string;
+  /** Index of the module being taken; questions belong to this module only. */
+  module_index: number;
+  modules: ModuleSummary[];
   answers: Record<string, string>;
   flagged: string[];
   time_spent: Record<string, number>;
@@ -104,7 +124,7 @@ export type UsageStatus = {
   limit: number;
   remaining: number;
   resets_at: string;
-  active: { attempt_id: string; section: Section; deadline: string }[];
+  active: { attempt_id: string; test_id: string; section: Section; deadline: string }[];
 };
 
 export type DomainBreakdown = Record<string, { subject: Subject; correct: number; total: number }>;
@@ -130,12 +150,13 @@ export type ResultItem = {
 
 export type AttemptResult = {
   attempt_id: string;
+  test_id: string;
   section: Section;
   title: string;
   is_guest: boolean;
   started_at: string;
   submitted_at: string;
-  duration_seconds: number;
+  modules: ModuleSummary[];
   correct_count: number;
   total_count: number;
   score: number;

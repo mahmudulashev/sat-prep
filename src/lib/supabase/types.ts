@@ -26,12 +26,15 @@ export type Database = {
           id: string;
           ip_hash: string | null;
           math_score: number | null;
+          module_index: number;
+          modules: Json;
           question_ids: string[];
           score: number | null;
           section: Database["public"]["Enums"]["exam_section"];
           started_at: string;
           status: Database["public"]["Enums"]["attempt_status"];
           submitted_at: string | null;
+          test_id: string;
           time_spent: Json;
           total_count: number | null;
           user_id: string | null;
@@ -48,12 +51,15 @@ export type Database = {
           id?: string;
           ip_hash?: string | null;
           math_score?: number | null;
+          module_index?: number;
+          modules?: Json;
           question_ids: string[];
           score?: number | null;
           section: Database["public"]["Enums"]["exam_section"];
           started_at?: string;
           status?: Database["public"]["Enums"]["attempt_status"];
           submitted_at?: string | null;
+          test_id: string;
           time_spent?: Json;
           total_count?: number | null;
           user_id?: string | null;
@@ -123,22 +129,28 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["questions"]["Insert"]>;
         Relationships: [];
       };
-      section_settings: {
+      test_forms: {
         Row: {
-          duration_seconds: number;
-          english_count: number;
-          math_count: number;
+          active: boolean;
+          created_at: string;
+          description: string;
+          id: string;
+          modules: Json;
           section: Database["public"]["Enums"]["exam_section"];
+          sort: number;
           title: string;
         };
         Insert: {
-          duration_seconds: number;
-          english_count?: number;
-          math_count?: number;
+          active?: boolean;
+          created_at?: string;
+          description: string;
+          id: string;
+          modules: Json;
           section: Database["public"]["Enums"]["exam_section"];
+          sort?: number;
           title: string;
         };
-        Update: Partial<Database["public"]["Tables"]["section_settings"]["Insert"]>;
+        Update: Partial<Database["public"]["Tables"]["test_forms"]["Insert"]>;
         Relationships: [];
       };
     };
@@ -171,11 +183,11 @@ export type Database = {
           p_guest_key?: string;
           p_ip_hash?: string;
           p_secret: string;
-          p_section: Database["public"]["Enums"]["exam_section"];
+          p_test_id: string;
         };
         Returns: Json;
       };
-      submit_attempt: {
+      submit_module: {
         Args: {
           p_answers?: Json;
           p_attempt_id: string;
@@ -185,6 +197,10 @@ export type Database = {
           p_time_spent?: Json;
           p_violations?: Json;
         };
+        Returns: Json;
+      };
+      seed_content: {
+        Args: { p_forms: Json; p_questions: Json; p_secret: string };
         Returns: Json;
       };
       usage_status: {

@@ -11,7 +11,7 @@ import type {
   AttemptResult,
   AttemptState,
   ProgressBody,
-  Section,
+  TestForm,
   UsageStatus,
 } from "./types";
 
@@ -20,7 +20,7 @@ export type ExamErrorCode =
   | "ATTEMPT_NOT_FOUND"
   | "ATTEMPT_IN_PROGRESS"
   | "GUEST_KEY_REQUIRED"
-  | "NO_QUESTIONS"
+  | "TEST_NOT_FOUND"
   | "UNKNOWN";
 
 export class ExamError extends Error {
@@ -36,6 +36,7 @@ export class ExamError extends Error {
       case "DAILY_LIMIT_REACHED":
         return 429;
       case "ATTEMPT_NOT_FOUND":
+      case "TEST_NOT_FOUND":
         return 404;
       case "ATTEMPT_IN_PROGRESS":
       case "GUEST_KEY_REQUIRED":
@@ -51,7 +52,7 @@ const KNOWN_CODES: ExamErrorCode[] = [
   "ATTEMPT_NOT_FOUND",
   "ATTEMPT_IN_PROGRESS",
   "GUEST_KEY_REQUIRED",
-  "NO_QUESTIONS",
+  "TEST_NOT_FOUND",
 ];
 
 function toExamError(error: { message: string }): ExamError {
@@ -115,11 +116,21 @@ export async function getUsage(): Promise<UsageStatus> {
   return data as unknown as UsageStatus;
 }
 
-export async function startAttempt(section: Section): Promise<AttemptPayload> {
+export async function listTests(): Promise<TestForm[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("test_forms")
+    .select("id, section, title, description, modules, sort")
+    .order("sort");
+  if (error) throw toExamError(error);
+  return data as unknown as TestForm[];
+}
+
+export async function startAttempt(testId: string): Promise<AttemptPayload> {
   const ctx = await getExamContext({ ensureGuestCookie: true });
   const { data, error } = await ctx.supabase.rpc("start_attempt", {
     p_secret: ctx.secret,
-    p_section: section,
+    p_test_id: testId,
     p_guest_key: ctx.guestKey,
     p_ip_hash: ctx.ipHash,
   });
@@ -159,16 +170,17 @@ export async function saveProgress(attemptId: string, body: ProgressBody) {
   return data as { status: string; deadline: string; server_now: string };
 }
 
-export async function submitAttempt(attemptId: string, body: ProgressBody) {
+/** Finishes the current module; returns the next module or a completed state. */
+export async function submitModule(attemptId: string, body: ProgressBody): Promise<AttemptState> {
   const ctx = await getExamContext();
-  const { data, error } = await ctx.supabase.rpc("submit_attempt", {
+  const { data, error } = await ctx.supabase.rpc("submit_module", {
     p_secret: ctx.secret,
     p_attempt_id: attemptId,
     p_guest_key: ctx.guestKey,
     ...progressArgs(body),
   });
   if (error) throw toExamError(error);
-  return data as { attempt_id: string; status: "completed" };
+  return data as unknown as AttemptState;
 }
 
 export async function getResult(attemptId: string): Promise<AttemptResult> {
