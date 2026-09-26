@@ -10,7 +10,7 @@ import { MAX_VIOLATIONS, SECTION_META } from "@/lib/exam/constants";
 import type { AttemptPayload, TestForm, UsageStatus } from "@/lib/exam/types";
 import { cn } from "@/lib/utils";
 import { ExamRunner } from "./exam-runner";
-import { enterFullscreen, exitFullscreen } from "./use-lockdown";
+import { enterFullscreen, exitFullscreen, FULLSCREEN_REQUIRED } from "./use-lockdown";
 
 type Props = {
   test: TestForm;
@@ -43,7 +43,7 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
     setError(null);
     setStarting(true);
     const fullscreen = await enterFullscreen();
-    if (!fullscreen) {
+    if (!fullscreen && FULLSCREEN_REQUIRED) {
       setStarting(false);
       setError("Your browser blocked full screen. Allow full screen for this site and try again.");
       return;

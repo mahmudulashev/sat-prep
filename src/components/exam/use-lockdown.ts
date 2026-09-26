@@ -12,19 +12,26 @@ function keyboardApi() {
   return (navigator as Navigator & { keyboard?: KeyboardLock }).keyboard;
 }
 
+/** Resolves false if the browser never answers (some embedded browsers don't). */
+function withTimeout<T>(promise: Promise<T> | undefined, ms: number) {
+  return Promise.race([promise, new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), ms))]);
+}
+
 export async function enterFullscreen() {
-  const el = document.documentElement;
   try {
     if (!document.fullscreenElement) {
-      await el.requestFullscreen({ navigationUI: "hide" });
+      await withTimeout(document.documentElement.requestFullscreen({ navigationUI: "hide" }), 2500);
     }
     // In Chromium, locking Escape means a quick press no longer exits full screen.
-    await keyboardApi()?.lock?.(["Escape"]);
-    return true;
+    await withTimeout(keyboardApi()?.lock?.(["Escape"]), 1000).catch(() => undefined);
   } catch {
-    return Boolean(document.fullscreenElement);
+    // Handled below.
   }
+  return Boolean(document.fullscreenElement);
 }
+
+/** Development builds may run without full screen (e.g. inside embedded previews). */
+export const FULLSCREEN_REQUIRED = process.env.NODE_ENV === "production";
 
 export async function exitFullscreen() {
   keyboardApi()?.unlock?.();
