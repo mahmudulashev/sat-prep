@@ -39,6 +39,9 @@ for (const test of tests) {
   }
 }
 
+const used = new Set(tests.flatMap((t) => t.modules.flatMap((m) => m.questions)));
+for (const id of byId.keys()) if (!used.has(id)) console.warn(`Note: ${id} is not used by any test`);
+
 if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
@@ -71,6 +74,7 @@ const forms = tests.map((t) => ({
     title: m.title,
     subject: m.subject,
     duration_seconds: m.minutes * 60,
+    break_seconds: (m.breakMinutes ?? 0) * 60,
     question_ids: m.questions,
   })),
 }));
@@ -119,7 +123,7 @@ for (const { q } of byId.values()) {
 console.log(`Validated ${questions.length} questions and ${forms.length} test forms.`);
 console.log("Answer distribution:", letters);
 for (const t of tests) {
-  console.log(`  ${t.id}: ${t.modules.map((m) => `${m.questions.length}q/${m.minutes}m`).join(" + ")}`);
+  console.log(`  ${t.id}: ${t.modules.map((m) => `${m.breakMinutes ? `[${m.breakMinutes}m break] ` : ""}${m.questions.length}q/${m.minutes}m`).join(" + ")}`);
 }
 
 if (process.argv.includes("--push")) {

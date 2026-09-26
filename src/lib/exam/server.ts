@@ -183,6 +183,17 @@ export async function submitModule(attemptId: string, body: ProgressBody): Promi
   return data as unknown as AttemptState;
 }
 
+export async function endBreak(attemptId: string): Promise<AttemptState> {
+  const ctx = await getExamContext();
+  const { data, error } = await ctx.supabase.rpc("end_break", {
+    p_secret: ctx.secret,
+    p_attempt_id: attemptId,
+    p_guest_key: ctx.guestKey,
+  });
+  if (error) throw toExamError(error);
+  return data as unknown as AttemptState;
+}
+
 export async function getResult(attemptId: string): Promise<AttemptResult> {
   const ctx = await getExamContext();
   const { data, error } = await ctx.supabase.rpc("get_result", {

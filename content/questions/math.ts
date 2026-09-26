@@ -138,6 +138,23 @@ export const math: SubjectBank = {
         "The slope is $\\dfrac{19 - 7}{6 - 2} = 3$. From $x = 6$ to $x = 10$ the input increases by 4, so the output increases by 12: $f(10) = 19 + 12 = 31$.",
     },
 
+    {
+      id: "ma-alg-11",
+      domain: ALG,
+      skill: "Linear functions",
+      difficulty: "medium",
+      prompt:
+        "The equation $y = 15x + 120$ gives the total amount $y$, in dollars, in Maya's savings account $x$ weeks after she started a savings plan. What is the best interpretation of $15$ in this context?",
+      choices: [
+        "Maya adds \\$15 to the account each week.",
+        "Maya had \\$15 in the account when she started the plan.",
+        "Maya will have \\$15 in the account after one week.",
+        "Maya will save for 15 weeks.",
+      ],
+      answer: "A",
+      explanation:
+        "In $y = 15x + 120$, the coefficient of $x$ is the rate of change: each additional week adds 15 dollars. The constant 120 is the starting amount.",
+    },
     // -----------------------------------------------------------------------
     // Advanced Math
     // -----------------------------------------------------------------------
@@ -264,6 +281,17 @@ export const math: SubjectBank = {
         "Factor: $x^3 - 4x = x(x - 2)(x + 2)$. The zeros are $-2$, $0$, and $2$, so the graph crosses the $x$-axis 3 times.",
     },
 
+    {
+      id: "ma-adv-11",
+      domain: ADV,
+      skill: "Nonlinear functions",
+      difficulty: "medium",
+      type: "spr",
+      prompt: "The function $f$ is defined by $f(x) = \\dfrac{x^2 + 6}{2}$. What is the value of $f(4)$?",
+      value: 11,
+      accepted: ["11"],
+      explanation: "$f(4) = \\dfrac{4^2 + 6}{2} = \\dfrac{22}{2} = 11$.",
+    },
     // -----------------------------------------------------------------------
     // Problem-Solving and Data Analysis
     // -----------------------------------------------------------------------
@@ -441,6 +469,16 @@ export const math: SubjectBank = {
       explanation: "The sample proportion is $\\dfrac{46}{200} = 0.23$. Applied to the town: $0.23 \\times 12{,}000 = 2{,}760$.",
     },
 
+    {
+      id: "ma-psd-11",
+      domain: PSD,
+      skill: "Percentages",
+      difficulty: "easy",
+      prompt: "In a survey of 250 students, 40% said they walk to school. How many of the students surveyed said they walk to school?",
+      choices: ["$40$", "$60$", "$100$", "$150$"],
+      answer: "C",
+      explanation: "$0.40 \\times 250 = 100$.",
+    },
     // -----------------------------------------------------------------------
     // Geometry and Trigonometry
     // -----------------------------------------------------------------------
@@ -561,6 +599,18 @@ export const math: SubjectBank = {
       value: 8,
       accepted: ["8"],
       explanation: "In a 45-45-90 triangle, the hypotenuse is $s\\sqrt{2}$, where $s$ is a leg. So $s = 8$.",
+    },
+    {
+      id: "ma-geo-11",
+      domain: GEO,
+      skill: "Area and volume",
+      difficulty: "hard",
+      type: "spr",
+      prompt: "A square is inscribed in a circle with a radius of 5. What is the area of the square?",
+      value: 50,
+      accepted: ["50"],
+      explanation:
+        "The diagonal of the inscribed square is a diameter of the circle, 10. A square with diagonal $d$ has area $\\dfrac{d^2}{2} = \\dfrac{100}{2} = 50$.",
     },
   ],
 };

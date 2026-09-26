@@ -82,6 +82,8 @@ export type ModuleSummary = {
   title: string;
   subject: Subject;
   duration_seconds: number;
+  /** Break shown before this module starts, in seconds. */
+  break_seconds: number;
   question_count: number;
 };
 
@@ -90,7 +92,13 @@ export type TestForm = {
   section: Section;
   title: string;
   description: string;
-  modules: { title: string; subject: Subject; duration_seconds: number; question_ids: string[] }[];
+  modules: {
+    title: string;
+    subject: Subject;
+    duration_seconds: number;
+    break_seconds?: number;
+    question_ids: string[];
+  }[];
   sort: number;
 };
 
@@ -102,6 +110,8 @@ export type AttemptPayload = {
   status: "in_progress";
   started_at: string;
   deadline: string;
+  /** Set while the student is on a break before the current module. */
+  break_until: string | null;
   server_now: string;
   /** Index of the module being taken; questions belong to this module only. */
   module_index: number;

@@ -113,6 +113,22 @@ export const english: SubjectBank = {
         "The report explains that the structure could safely carry more than twice the expected load, which shows the plan is dependable. In this context \"sound\" means reliable or well founded.",
     },
 
+    {
+      id: "en-wic-07",
+      domain: CS,
+      skill: "Words in Context",
+      difficulty: "hard",
+      stimulus: [
+        text(
+          "Physicist Lise Meitner's role in the discovery of nuclear fission was long ___: although she helped provide the first theoretical explanation of the key experiment, the 1944 Nobel Prize in Chemistry was awarded to her collaborator Otto Hahn alone.",
+        ),
+      ],
+      prompt: COMPLETE_WORD,
+      choices: ["overlooked", "exaggerated", "disputed", "publicized"],
+      answer: "A",
+      explanation:
+        "The colon introduces evidence that Meitner didn't receive credit: the prize went to Hahn alone. Her role was therefore overlooked. Nothing suggests it was exaggerated or widely publicized.",
+    },
     // -----------------------------------------------------------------------
     // Craft and Structure — Text Structure and Purpose
     // -----------------------------------------------------------------------
@@ -201,6 +217,27 @@ export const english: SubjectBank = {
         "The text contrasts a prediction (tellers would disappear) with the outcome (tellers increased) and explains why. Its purpose is to show that the technology's effect on jobs differed from expectations.",
     },
 
+    {
+      id: "en-tsp-05",
+      domain: CS,
+      skill: "Text Structure and Purpose",
+      difficulty: "medium",
+      stimulus: [
+        text(
+          "Sea turtles hatch on beaches at night and must reach the ocean quickly. For decades, researchers assumed that hatchlings found the water by following the sound of breaking waves. Experiments have since shown that hatchlings instead crawl toward the brightest horizon, which on an undeveloped beach is usually the open sea. This finding explains why artificial lights near beaches can lead hatchlings in the wrong direction.",
+        ),
+      ],
+      prompt: "Which choice best describes the overall structure of the text?",
+      choices: [
+        "It describes a problem facing sea turtles and proposes several possible solutions.",
+        "It presents an earlier assumption, describes findings that replaced it, and notes a consequence of those findings.",
+        "It compares the behavior of two species of sea turtles.",
+        "It argues that most research on sea turtles has been unreliable.",
+      ],
+      answer: "B",
+      explanation:
+        "The text states an old assumption (sound), replaces it with newer evidence (brightest horizon), and ends with an implication (artificial lights mislead hatchlings). No solutions or species comparisons are offered.",
+    },
     // -----------------------------------------------------------------------
     // Craft and Structure — Cross-Text Connections
     // -----------------------------------------------------------------------
@@ -326,6 +363,27 @@ export const english: SubjectBank = {
         "Sato's reasoning is that the word-frequency pattern matches natural languages, and a medieval forger wouldn't have known to reproduce it. The text says the script is unknown and hasn't been decoded.",
     },
 
+    {
+      id: "en-cid-04",
+      domain: II,
+      skill: "Central Ideas and Details",
+      difficulty: "medium",
+      stimulus: [
+        text(
+          "In the 1930s, photographer Dorothea Lange traveled across the American West documenting families displaced by drought and economic hardship. Rather than photographing crowds, Lange usually focused on individuals, often waiting until her subjects grew comfortable with her presence. The resulting portraits, such as *Migrant Mother* (1936), gave audiences across the country a personal view of the era's hardships.",
+        ),
+      ],
+      prompt: "Which choice best states the main idea of the text?",
+      choices: [
+        "Lange preferred photographing large crowds to photographing individuals.",
+        "Lange's work was mostly unknown to audiences during the 1930s.",
+        "Lange's patient, close portraits of individuals helped audiences understand the hardships of the 1930s.",
+        "Lange stopped working as a photographer after 1936.",
+      ],
+      answer: "C",
+      explanation:
+        "The text emphasizes Lange's focus on individuals, her patience, and the portraits' effect on national audiences. Choice A contradicts the text, and B and D aren't supported.",
+    },
     // -----------------------------------------------------------------------
     // Information and Ideas — Command of Evidence (Textual)
     // -----------------------------------------------------------------------
@@ -562,6 +620,27 @@ export const english: SubjectBank = {
         "Plants adapted to shade beneath tall trees are suited to low, indirect light, which is similar to the light inside homes. The other choices contradict their shady origins.",
     },
 
+    {
+      id: "en-inf-04",
+      domain: II,
+      skill: "Inferences",
+      difficulty: "hard",
+      stimulus: [
+        text(
+          "Many fig species can be pollinated by only one particular species of wasp, and those wasps can reproduce only inside the flowers of that fig species. On a remote island, botanists found a fig species that relies on such a partnership, but after a thorough survey they found no trace of its pollinating wasp. It can most reasonably be concluded that ___",
+        ),
+      ],
+      prompt: "Which choice most logically completes the text?",
+      choices: [
+        "the pollinating wasps are thriving on the island.",
+        "fig trees on the island do not need to be pollinated to produce seeds.",
+        "the wasps have begun reproducing inside other plants on the island.",
+        "the figs on the island are not currently being pollinated by their usual wasp partner.",
+      ],
+      answer: "D",
+      explanation:
+        "If the fig relies on one wasp species and that wasp is absent from the island, the figs there cannot currently be pollinated by it. The text says the wasps reproduce only in that fig, which rules out C.",
+    },
     // -----------------------------------------------------------------------
     // Standard English Conventions — Boundaries
     // -----------------------------------------------------------------------
@@ -767,6 +846,22 @@ export const english: SubjectBank = {
         "The subject is \"Each,\" which is singular. Ignore the intervening phrase \"of the paintings...\" and choose the singular verb \"offers.\"",
     },
 
+    {
+      id: "en-fss-07",
+      domain: SEC,
+      skill: "Form, Structure, and Sense",
+      difficulty: "medium",
+      stimulus: [
+        text(
+          "Since it opened in 1897, the Library of Congress's Thomas Jefferson Building ___ millions of visitors with its elaborate murals, mosaics, and sculptures.",
+        ),
+      ],
+      prompt: CONVENTIONS,
+      choices: ["has impressed", "impress", "impressing", "will impress"],
+      answer: "A",
+      explanation:
+        "\"Since it opened in 1897\" describes an action that began in the past and continues to the present, which calls for the present perfect \"has impressed.\" \"Impressing\" can't serve as the main verb.",
+    },
     // -----------------------------------------------------------------------
     // Expression of Ideas — Transitions
     // -----------------------------------------------------------------------
@@ -867,6 +962,22 @@ export const english: SubjectBank = {
         "The second sentence corrects the popular image described in the first, so \"In reality\" is the logical transition.",
     },
 
+    {
+      id: "en-trn-07",
+      domain: EOI,
+      skill: "Transitions",
+      difficulty: "medium",
+      stimulus: [
+        text(
+          "Many desert plants survive dry seasons by storing water in thick, fleshy leaves and stems. ___ others, such as the mesquite tree, send roots more than 50 meters underground to reach water deep below the surface.",
+        ),
+      ],
+      prompt: TRANSITION,
+      choices: ["Similarly,", "Therefore,", "In contrast,", "For instance,"],
+      answer: "C",
+      explanation:
+        "The second sentence describes a different survival strategy (deep roots rather than water storage), so the contrasting transition \"In contrast\" fits.",
+    },
     // -----------------------------------------------------------------------
     // Expression of Ideas — Rhetorical Synthesis
     // -----------------------------------------------------------------------

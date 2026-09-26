@@ -158,6 +158,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      end_break: {
+        Args: { p_attempt_id: string; p_guest_key?: string; p_secret: string };
+        Returns: Json;
+      };
       get_attempt: {
         Args: { p_attempt_id: string; p_guest_key?: string; p_secret: string };
         Returns: Json;
