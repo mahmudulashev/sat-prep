@@ -3,7 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { serverEnv } from "@/lib/env";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 import { GUEST_COOKIE } from "./constants";
 import type {
@@ -67,15 +67,7 @@ const sha256 = (value: string) => createHash("sha256").update(value).digest("hex
  * session; guests by a hashed httpOnly cookie plus a salted hash of their IP.
  */
 export async function getExamContext({ ensureGuestCookie = false } = {}) {
-  const [supabase, cookieStore, headerList] = await Promise.all([
-    createClient(),
-    cookies(),
-    headers(),
-  ]);
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [{ supabase, user }, cookieStore, headerList] = await Promise.all([getCurrentUser(), cookies(), headers()]);
 
   let guestId = cookieStore.get(GUEST_COOKIE)?.value;
   if (!guestId && ensureGuestCookie) {

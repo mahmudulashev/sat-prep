@@ -36,9 +36,9 @@ export async function proxy(request: NextRequest) {
   );
 
   // Refreshes the session cookie when needed. Must run before any redirect.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // The token is verified locally against the project's public signing keys.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims?.sub ? data.claims : null;
 
   const { pathname, search } = request.nextUrl;
 

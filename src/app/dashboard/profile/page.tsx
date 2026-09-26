@@ -19,7 +19,7 @@ export default async function ProfilePage() {
         </span>
         <p className="mt-4 text-lg font-bold">{name}</p>
         <p className="text-sm text-muted">{user.email}</p>
-        <p className="mt-1 text-xs text-muted">Member since {formatDate(profile?.created_at ?? user.created_at)}</p>
+        {profile?.created_at && <p className="mt-1 text-xs text-muted">Member since {formatDate(profile.created_at)}</p>}
 
         <dl className="mt-6 grid grid-cols-2 gap-3 text-left">
           <div className="rounded-2xl bg-canvas p-4">

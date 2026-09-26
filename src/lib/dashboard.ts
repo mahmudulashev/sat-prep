@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { ENGLISH_DOMAINS, MATH_DOMAINS, STRIKE_TYPES } from "@/lib/exam/constants";
 import type { DomainBreakdown, Section, Subject, Violation } from "@/lib/exam/types";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 export type AttemptSummary = {
   id: string;
@@ -27,10 +27,7 @@ export type AttemptSummary = {
 
 /** The signed-in user's profile and attempts (deduplicated per request). */
 export const getDashboardData = cache(async () => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await getCurrentUser();
   if (!user) redirect("/login?next=/dashboard");
 
   const [{ data: profile }, { data: rows }, { data: forms }] = await Promise.all([
