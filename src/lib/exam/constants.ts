@@ -1,4 +1,4 @@
-import type { ChoiceLetter, Section } from "./types";
+import type { ChoiceLetter, Section, ViolationType } from "./types";
 
 export const GUEST_COOKIE = "sp_gid";
 
@@ -9,6 +9,9 @@ export const MEMBER_DAILY_LIMIT = 3;
 
 /** Integrity events allowed before the exam is submitted automatically. */
 export const MAX_VIOLATIONS = 3;
+
+/** Violations that count toward the automatic-submission limit. */
+export const STRIKE_TYPES: ViolationType[] = ["fullscreen-exit", "tab-hidden", "devtools"];
 
 export const SECTIONS: Section[] = ["math", "english", "general"];
 

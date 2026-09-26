@@ -1,10 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { STRIKE_TYPES } from "@/lib/exam/constants";
 import type { Violation, ViolationType } from "@/lib/exam/types";
-
-/** Violations that count toward the automatic-submission limit. */
-export const STRIKE_TYPES: ViolationType[] = ["fullscreen-exit", "tab-hidden", "devtools"];
 
 type KeyboardLock = { lock?: (keys?: string[]) => Promise<void>; unlock?: () => void };
 

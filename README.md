@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Satify — Digital SAT practice
 
-## Getting Started
+Full-length digital SAT practice in a test interface modeled on the real exam, with
+exam lockdown, daily test limits and score analytics.
 
-First, run the development server:
+## Features
+
+- **Three tests** that follow the digital SAT structure
+  - Math: 2 modules × 22 questions (35 min each)
+  - Reading and Writing: 2 modules × 27 questions (32 min each)
+  - Full-length: both sections (98 questions) with a 10-minute break, scored 400–1600
+- **Test interface**: split passage view with a resizable divider, answer eliminator,
+  mark for review, question navigator, Check Your Work page, highlighter, line reader,
+  graphing and scientific calculator, math reference sheet, student-produced responses
+  with answer preview, timers per module
+- **Lockdown**: full-screen only, blocked developer-tools / view-source / copy-paste
+  shortcuts and right-click, tab-switch and developer-tools detection, 3 warnings then
+  automatic submission; every event is logged with the attempt
+- **Daily limits** enforced in the database: guests 1 test/day (by cookie and hashed
+  IP), signed-in users 3 tests/day (resets 00:00 UTC)
+- **Server-side scoring**: answer keys never reach the browser; timing and grading
+  are done in Postgres
+- **Score report**: scaled scores, domain breakdown, skill radar, difficulty and
+  timing charts, and a full question review with explanations
+
+## Stack
+
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Supabase (Postgres,
+Auth, RLS) · Recharts · KaTeX · Zod
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env.local   # fill in the values
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Database
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Create a Supabase project and run the files in `supabase/migrations` in order.
+2. Generate a server secret and store its SHA-256 hash in the database:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```bash
+   openssl rand -hex 32            # -> EXAM_SERVER_SECRET in .env.local
+   printf %s "<secret>" | shasum -a 256
+   ```
 
-## Learn More
+   ```sql
+   insert into private.config (key, value) values ('server_secret_sha256', '<hash>');
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+3. Load the question bank and tests:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   npm run seed -- --push
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Questions live in `content/questions/*.ts` and test forms in `content/tests.ts`.
+`npm run seed` validates them and regenerates `supabase/seed.sql`.
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript |
+| `npm run seed` | Validate content and write `supabase/seed.sql` (`-- --push` uploads it) |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+
+- Browsers don't allow a website to fully disable developer tools or prevent leaving
+  full screen. The lockdown detects and records these actions, warns the student and
+  submits the test after repeated violations; answers are graded on the server so
+  inspecting the page reveals nothing useful.
+- Full screen is required in production builds; development builds continue without
+  it when the browser refuses (for example inside embedded previews).
+
+SAT is a trademark of the College Board, which is not affiliated with this project.
+All questions are original.
