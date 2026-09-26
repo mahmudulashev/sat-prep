@@ -15,6 +15,11 @@ export function formatClock(totalSeconds: number) {
 }
 
 export function formatDuration(totalSeconds: number) {
+  if (totalSeconds >= 3600) {
+    const h = Math.floor(totalSeconds / 3600);
+    const rest = Math.floor((totalSeconds % 3600) / 60);
+    return rest ? `${h}h ${rest}m` : `${h}h`;
+  }
   const m = Math.floor(totalSeconds / 60);
   const s = Math.round(totalSeconds % 60);
   if (m === 0) return `${s}s`;
