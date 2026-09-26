@@ -362,3 +362,10 @@ mark[data-hl][data-underline="true"] {
 [data-shown] .on-show-highlight {
   transition: background-size 0.9s cubic-bezier(0.6, 0, 0.2, 1) var(--d, 300ms);
 }
+
+/* Nav links glide to their section on the landing page */
+@media (prefers-reduced-motion: no-preference) {
+  html:has([data-page-scale="landing"]) {
+    scroll-behavior: smooth;
+  }
+}
