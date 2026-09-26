@@ -1,4 +1,4 @@
-import { ArrowRight, Clock, Coffee, Layers, Trophy } from "lucide-react";
+import { ArrowRight, Clock, Coffee, Layers, Sparkles, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SectionArt } from "@/components/section-art";
@@ -91,6 +91,12 @@ function SectionBlock({ section, tests, attempts }: { section: Section; tests: T
           {tests.map((test) => (
             <TestRow key={test.id} test={test} attempts={attempts.filter((a) => a.testId === test.id)} />
           ))}
+          <li className="px-6 py-5">
+            <div className="flex items-center gap-3 rounded-2xl border border-dashed border-line px-4 py-3.5 text-sm text-muted">
+              <Sparkles className="size-4 text-brand" />
+              More {SECTION_TITLE[section]} practice tests are on the way.
+            </div>
+          </li>
         </ul>
       </div>
     </section>
