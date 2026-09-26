@@ -2,15 +2,13 @@ import {
   ArrowRight,
   ArrowUpRight,
   BarChart3,
-  Calculator,
   Check,
   Clock,
-  Highlighter,
   Lock,
-  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { LogoMark } from "@/components/logo";
+import { FeatureBento } from "@/components/marketing/feature-bento";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SectionArt } from "@/components/section-art";
 import { ButtonLink } from "@/components/ui/button";
@@ -22,7 +20,7 @@ export default async function Home() {
   const { user } = await getCurrentUser();
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" data-page-scale="landing">
       <SiteHeader signedIn={Boolean(user)} />
 
       <main className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
@@ -65,7 +63,7 @@ function Hero({ signedIn }: { signedIn: boolean }) {
             <br />
             SAT confidence
           </h1>
-          <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-ink/75 sm:text-base">
+          <p className="mt-5 max-w-xl text-[0.9375rem] leading-relaxed text-ink/75 sm:text-base">
             Timed Math, Reading and Writing, and combined practice tests in an interface that
             works like the real digital SAT, with detailed score analytics after every attempt.
           </p>
@@ -206,41 +204,15 @@ function Tests() {
 }
 
 function Features() {
-  const items = [
-    {
-      icon: ShieldCheck,
-      title: "Exam lockdown",
-      body: "Full-screen mode, blocked shortcuts and developer tools, and tab-switch detection keep every attempt honest.",
-    },
-    {
-      icon: Calculator,
-      title: "Built-in tools",
-      body: "Graphing and scientific calculator, math reference sheet, answer eliminator, highlighter and line reader.",
-    },
-    {
-      icon: Highlighter,
-      title: "Real test layout",
-      body: "Split passage view, question navigator, mark for review and a check-your-work page before you submit.",
-    },
-    {
-      icon: BarChart3,
-      title: "Score analytics",
-      body: "Scaled scores, domain breakdowns, timing per question and progress trends saved to your profile.",
-    },
-  ];
   return (
     <section id="features" className="scroll-mt-24 pt-24">
-      <SectionHeading eyebrow="Features" title="Everything you need on test day" />
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {items.map(({ icon: Icon, title, body }) => (
-          <div key={title} className="rounded-3xl bg-surface p-6 shadow-card">
-            <span className="grid size-11 place-items-center rounded-2xl bg-brand-soft text-brand">
-              <Icon className="size-5" />
-            </span>
-            <h3 className="mt-5 font-bold">{title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
-          </div>
-        ))}
+      <SectionHeading
+        eyebrow="Features"
+        title="Everything you need on test day"
+        body="The same tools, layout and pressure as the real digital SAT — plus the feedback it doesn't give you."
+      />
+      <div className="mt-10">
+        <FeatureBento />
       </div>
     </section>
   );

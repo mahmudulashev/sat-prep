@@ -18,7 +18,7 @@ export function Logo({ href = "/", className }: { href?: string; className?: str
   return (
     <Link href={href} className={cn("flex items-center gap-2.5", className)} aria-label={`${SITE_NAME} home`}>
       <LogoMark />
-      <span className="text-[20px] font-extrabold tracking-[-0.03em] text-ink">
+      <span className="text-[1.25rem] font-extrabold tracking-[-0.03em] text-ink">
         {SITE_NAME.toLowerCase()}
         <span className="text-brand">.</span>
       </span>

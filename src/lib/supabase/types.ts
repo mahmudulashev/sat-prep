@@ -20,6 +20,7 @@ export type Database = {
           breakdown: Json | null;
           correct_count: number | null;
           deadline: string;
+          deleted_at: string | null;
           english_score: number | null;
           flagged: string[];
           guest_key: string | null;
@@ -45,6 +46,7 @@ export type Database = {
           breakdown?: Json | null;
           correct_count?: number | null;
           deadline: string;
+          deleted_at?: string | null;
           english_score?: number | null;
           flagged?: string[];
           guest_key?: string | null;
@@ -158,6 +160,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      delete_attempt: {
+        Args: { p_attempt_id: string };
+        Returns: boolean;
+      };
       end_break: {
         Args: { p_attempt_id: string; p_guest_key?: string; p_secret: string };
         Returns: Json;

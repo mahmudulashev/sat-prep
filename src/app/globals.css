@@ -141,3 +141,18 @@ mark[data-hl][data-underline="true"] {
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+ * The landing page reads best a little larger on desktop screens. Scaling the
+ * root font size scales every rem-based size on that page together.
+ */
+@media (min-width: 1024px) {
+  :root:has([data-page-scale="landing"]) {
+    font-size: 110%;
+  }
+}
+@media (min-width: 1400px) {
+  :root:has([data-page-scale="landing"]) {
+    font-size: 120%;
+  }
+}

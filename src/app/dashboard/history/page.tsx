@@ -1,6 +1,7 @@
 import { ArrowUpRight, ShieldAlert } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { DeleteAttemptButton } from "@/components/dashboard/delete-attempt-button";
 import { SectionArt } from "@/components/section-art";
 import { getDashboardData } from "@/lib/dashboard";
 import { isSection, SECTION_META, SECTIONS } from "@/lib/exam/constants";
@@ -51,7 +52,9 @@ export default async function HistoryPage({ searchParams }: PageProps<"/dashboar
                 <th className="hidden px-5 py-4 font-semibold sm:table-cell">Math</th>
                 <th className="hidden px-5 py-4 font-semibold lg:table-cell">Accuracy</th>
                 <th className="hidden px-5 py-4 font-semibold lg:table-cell">Time</th>
-                <th className="w-12 px-3 py-4 sm:px-5" />
+                <th className="w-24 px-3 py-4 sm:px-5">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -87,9 +90,16 @@ export default async function HistoryPage({ searchParams }: PageProps<"/dashboar
                   </td>
                   <td className="hidden px-5 py-3.5 text-muted tabular-nums lg:table-cell">{formatDuration(a.secondsSpent)}</td>
                   <td className="px-3 py-3.5 sm:px-5">
-                    <Link href={`/results/${a.id}`} className="grid size-8 place-items-center rounded-full bg-canvas hover:bg-ink hover:text-white" aria-label="Open score report">
-                      <ArrowUpRight className="size-4" />
-                    </Link>
+                    <div className="flex items-center justify-end gap-1">
+                      <DeleteAttemptButton attemptId={a.id} title={a.testTitle} score={a.score} />
+                      <Link
+                        href={`/results/${a.id}`}
+                        className="grid size-8 place-items-center rounded-full bg-canvas hover:bg-ink hover:text-white"
+                        aria-label="Open score report"
+                      >
+                        <ArrowUpRight className="size-4" />
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}
