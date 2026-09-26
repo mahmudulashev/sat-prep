@@ -20,7 +20,9 @@ export function CheckYourWork({
   return (
     <div className="h-full overflow-y-auto bg-bb-gray px-6 py-8 font-exam text-bb-ink">
       <h2 className="text-center text-[34px] font-normal">Check Your Work</h2>
-      <p className="mt-6 text-center text-[16px]">On test day, you won&apos;t be able to move on to the next module until time expires.</p>
+      <p className="mt-6 text-center text-[16px]">
+        On test day, you won&apos;t be able to move on to the next module until time expires.
+      </p>
       <p className="mt-3 text-center text-[16px]">
         For these practice questions, you can click <strong>Next</strong> when you&apos;re ready to move on.
       </p>
@@ -66,9 +68,15 @@ export function BreakScreen({ remaining, onResume, busy }: { remaining: number; 
         </div>
         <div className="space-y-5 text-[17px] leading-relaxed">
           <h2 className="text-[26px] font-bold">Practice Test Break</h2>
-          <p>You can resume this practice test as soon as you&apos;re ready to move on. On test day, you&apos;ll wait until the clock counts down.</p>
+          <p>
+            You can resume this practice test as soon as you&apos;re ready to move on. On test day, you&apos;ll wait until the
+            clock counts down.
+          </p>
           <p className="font-bold">Take a Break: Do Not Close Your Device</p>
-          <p>After the break, the Math section starts with its own timer. Stay in full screen — leaving it is still recorded during the break.</p>
+          <p>
+            After the break, the Math section starts with its own timer. Stay in full screen — leaving it is still recorded during
+            the break.
+          </p>
         </div>
       </div>
     </div>
@@ -100,7 +108,7 @@ const CONFETTI = (() => {
   }));
 })();
 
-export function Finished({ resultHref, message }: { resultHref: string; message?: string }) {
+export function Finished({ resultHref, homeHref = "/", message }: { resultHref: string; homeHref?: string; message?: string }) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-bb-gray font-exam text-bb-ink">
       <style>{`@keyframes confetti-fall{0%{transform:translateY(-10vh) rotate(0)}100%{transform:translateY(110vh) rotate(720deg)}}`}</style>
@@ -124,7 +132,7 @@ export function Finished({ resultHref, message }: { resultHref: string; message?
       </div>
 
       <div className="relative flex h-12 items-center justify-end bg-white px-10">
-        <Link href="/" className="flex items-center gap-2 text-[14px] font-medium hover:underline">
+        <Link href={homeHref} className="flex items-center gap-2 text-[14px] font-medium hover:underline">
           Return to Home <Home className="size-4" />
         </Link>
       </div>
@@ -133,9 +141,7 @@ export function Finished({ resultHref, message }: { resultHref: string; message?
         <h1 className="text-[34px] font-normal">You&apos;re All Finished!</h1>
         <div className="mt-8 w-full max-w-[480px] rounded-md bg-white px-10 pt-10 pb-10 text-center shadow-[0_2px_10px_rgba(0,0,0,0.1)]">
           <LaptopSmile />
-          <p className="mt-6 text-[16px] leading-relaxed">
-            {message ?? "Your answers have been submitted and scored."}
-          </p>
+          <p className="mt-6 text-[16px] leading-relaxed">{message ?? "Your answers have been submitted and scored."}</p>
           <p className="mt-4 text-[16px] leading-relaxed">
             Open your score report to see your scaled scores, a breakdown by skill and a review of every question.
           </p>

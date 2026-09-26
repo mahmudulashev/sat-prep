@@ -71,13 +71,19 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
     }
   }
 
-  if (attempt) return <ExamRunner initial={attempt} studentName={studentName} unrestricted={Boolean(usage?.unlimited)} />;
+  if (attempt)
+    return (
+      <ExamRunner initial={attempt} studentName={studentName} unrestricted={Boolean(usage?.unlimited)} signedIn={signedIn} />
+    );
 
   return (
     <div className="min-h-screen" data-page-scale="app">
       <header className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo />
-        <Link href={signedIn ? "/dashboard/tests" : "/#tests"} className="flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-ink">
+        <Link
+          href={signedIn ? "/dashboard/tests" : "/#tests"}
+          className="flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-ink"
+        >
           <ArrowLeft className="size-4" /> All tests
         </Link>
       </header>
@@ -109,7 +115,9 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
                     </div>
                   ) : null}
                   <div className="flex items-center gap-4 rounded-2xl bg-canvas px-4 py-3.5">
-                    <span className="grid size-9 place-items-center rounded-xl bg-white text-sm font-bold shadow-sm">{i + 1}</span>
+                    <span className="grid size-9 place-items-center rounded-xl bg-white text-sm font-bold shadow-sm">
+                      {i + 1}
+                    </span>
                     <div className="flex-1">
                       <p className="font-semibold">{m.title}</p>
                       <p className="text-sm text-muted">
@@ -131,12 +139,15 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
           <div className="rounded-3xl bg-ink p-7 text-white shadow-float">
             <h2 className="text-xl font-bold">Before you begin</h2>
             <ul className="mt-5 space-y-4 text-sm text-white/80">
-              <Rule icon={<Maximize className="size-4" />}>The test opens in full screen and must stay there until you finish.</Rule>
+              <Rule icon={<Maximize className="size-4" />}>
+                The test opens in full screen and must stay there until you finish.
+              </Rule>
               <Rule icon={<Lock className="size-4" />}>
                 Right-click, copy and paste, developer tools and browser shortcuts are disabled.
               </Rule>
               <Rule icon={<ShieldCheck className="size-4" />}>
-                Leaving full screen, switching tabs or opening developer tools gives a warning. After {MAX_VIOLATIONS} warnings the test is submitted automatically.
+                Leaving full screen, switching tabs or opening developer tools gives a warning. After {MAX_VIOLATIONS} warnings
+                the test is submitted automatically.
               </Rule>
               <Rule icon={<Timer className="size-4" />}>
                 Each module has its own timer, which keeps running if you close the page. Your answers save automatically.
@@ -161,7 +172,9 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
 
             {outOfTests ? (
               <div className="mt-6 rounded-2xl bg-white/10 p-5 text-sm">
-                <p className="font-semibold text-white">You&apos;ve used today&apos;s {usage?.is_guest ? "free test" : "tests"}.</p>
+                <p className="font-semibold text-white">
+                  You&apos;ve used today&apos;s {usage?.is_guest ? "free test" : "tests"}.
+                </p>
                 <p className="mt-1 text-white/70">
                   {usage?.is_guest
                     ? "Create a free account to take up to 3 tests a day and save your results."

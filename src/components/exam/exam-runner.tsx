@@ -64,11 +64,14 @@ export function ExamRunner({
   initial,
   studentName,
   unrestricted = false,
+  signedIn = false,
 }: {
   initial: AttemptPayload;
   studentName: string;
   /** The site owner's account: no lockdown warnings or automatic submission. */
   unrestricted?: boolean;
+  /** Signed-in students go back to their dashboard when they finish. */
+  signedIn?: boolean;
 }) {
   const [attempt, setAttempt] = useState(initial);
   const [view, setView] = useState<View>(initial.break_until ? "break" : "question");
@@ -108,7 +111,11 @@ export function ExamRunner({
 
   // Fetch every image in this module up front so moving between questions is instant.
   useEffect(() => {
-    const ids = new Set(JSON.stringify(questions).match(/\{\{img:[0-9a-f]+/g)?.map((t) => t.slice(6)));
+    const ids = new Set(
+      JSON.stringify(questions)
+        .match(/\{\{img:[0-9a-f]+/g)
+        ?.map((t) => t.slice(6)),
+    );
     for (const q of questions) for (const b of q.stimulus) if (b.type === "image") ids.add(b.asset);
     const images = [...ids].map((id) => {
       const img = new Image();
@@ -448,7 +455,7 @@ export function ExamRunner({
   /* ------------------------------------------------------------------ */
 
   if (view === "finished" && completedId) {
-    return <Finished resultHref={`/results/${completedId}`} message={finishMessage} />;
+    return <Finished resultHref={`/results/${completedId}`} homeHref={signedIn ? "/dashboard" : "/"} message={finishMessage} />;
   }
   if (view === "module-over") return <ModuleOver />;
   if (view === "break") {
@@ -475,7 +482,12 @@ export function ExamRunner({
   const number = index + 1;
 
   const questionColumn = (
-    <div className={cn("pt-9 pb-16 font-serif text-[16px] leading-[1.6] text-bb-ink", isEnglish || isSpr ? "px-10 lg:px-[72px]" : "")}>
+    <div
+      className={cn(
+        "pt-9 pb-16 font-serif text-[16px] leading-[1.6] text-bb-ink",
+        isEnglish || isSpr ? "px-10 lg:px-[72px]" : "",
+      )}
+    >
       <QuestionBar
         number={number}
         flagged={flagged.includes(current.id)}
@@ -536,7 +548,9 @@ export function ExamRunner({
   } else {
     body = (
       <div className="h-full overflow-y-auto">
-        <div className={cn("mx-auto px-6", current.prompt.includes("{{img:") ? "max-w-[960px]" : "max-w-[720px]")}>{questionColumn}</div>
+        <div className={cn("mx-auto px-6", current.prompt.includes("{{img:") ? "max-w-[960px]" : "max-w-[720px]")}>
+          {questionColumn}
+        </div>
       </div>
     );
   }
@@ -642,12 +656,12 @@ export function ExamRunner({
       {modal === "help" && (
         <ExamModal title="Help" onClose={() => setModal(null)} wide>
           <p>
-            <strong>Navigating:</strong> use <strong>Back</strong> and <strong>Next</strong>, or open the question menu at
-            the bottom of the screen to jump to any question in this module.
+            <strong>Navigating:</strong> use <strong>Back</strong> and <strong>Next</strong>, or open the question menu at the
+            bottom of the screen to jump to any question in this module.
           </p>
           <p>
-            <strong>Mark for Review:</strong> flag a question to come back to it. Flagged questions show a red bookmark on
-            the review page.
+            <strong>Mark for Review:</strong> flag a question to come back to it. Flagged questions show a red bookmark on the
+            review page.
           </p>
           <p>
             <strong>Answer eliminator:</strong> select the ABC button to cross out answer choices you have ruled out.
@@ -659,8 +673,8 @@ export function ExamRunner({
             <strong>Calculator and reference sheet:</strong> available for every Math question.
           </p>
           <p>
-            <strong>Test security:</strong> the test runs in full screen. Leaving full screen, switching tabs or opening
-            developer tools is recorded; after {MAX_VIOLATIONS} warnings the test is submitted automatically.
+            <strong>Test security:</strong> the test runs in full screen. Leaving full screen, switching tabs or opening developer
+            tools is recorded; after {MAX_VIOLATIONS} warnings the test is submitted automatically.
           </p>
         </ExamModal>
       )}
@@ -710,8 +724,8 @@ export function ExamRunner({
           }
         >
           <p>
-            Your test will be submitted now and scored as it is. Unanswered questions — including any remaining modules — count
-            as incorrect, and this attempt still counts toward today&apos;s limit.
+            Your test will be submitted now and scored as it is. Unanswered questions — including any remaining modules — count as
+            incorrect, and this attempt still counts toward today&apos;s limit.
           </p>
         </ExamModal>
       )}
