@@ -345,3 +345,11 @@ mark[data-hl][data-underline="true"] {
     scroll-behavior: smooth;
   }
 }
+
+/* Cropped images of official questions keep their printed size but never overflow */
+.question-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  user-select: none;
+}

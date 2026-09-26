@@ -168,7 +168,7 @@ function ResumeBanner({ attempt }: { attempt: AttemptSummary }) {
           {attempt.testTitle} — the timer is still running. Resume before it runs out.
         </p>
       </div>
-      <ButtonLink href={`/exam/${attempt.section}`} variant="dark">
+      <ButtonLink href={`/exam/${attempt.section}?test=${attempt.testId}`} variant="dark">
         Resume test
       </ButtonLink>
     </div>

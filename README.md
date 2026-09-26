@@ -88,3 +88,19 @@ Questions live in `content/questions/*.ts` and test forms in `content/tests.ts`.
 
 SAT is a trademark of the College Board, which is not affiliated with this project.
 All questions are original.
+
+## Official practice content (private)
+
+Official College Board practice tests and question bank PDFs go in `SATBOOKS/` and
+`QUESTIONS BANK/` (both git-ignored). To rebuild and upload them:
+
+```bash
+python3 -m pip install pymupdf        # once
+npm run extract:official              # writes content/official/ (git-ignored)
+npm run seed:official                 # uploads questions, tests and images to Supabase
+```
+
+Reading and Writing questions are stored as text (with tables and graphs as
+images); Math questions are stored as images cropped from the PDFs. Question bank
+items also build adaptive tests, where Module 2 is easier or harder depending on
+the Module 1 score.

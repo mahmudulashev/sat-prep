@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SectionArt } from "@/components/section-art";
 import { getDashboardData, isRunning, type AttemptSummary } from "@/lib/dashboard";
 import { SECTION_META, SECTIONS } from "@/lib/exam/constants";
+import { formSize, isAdaptive, moduleSize } from "@/lib/exam/forms";
 import { getUsage, listTests } from "@/lib/exam/server";
 import type { Section, TestForm } from "@/lib/exam/types";
 import { cn, formatDate } from "@/lib/utils";
@@ -106,7 +107,7 @@ function SectionBlock({ section, tests, attempts }: { section: Section; tests: T
 function TestRow({ test, attempts }: { test: TestForm; attempts: AttemptSummary[] }) {
   const active = attempts.find(isRunning);
   const done = attempts.filter((a) => a.status === "completed");
-  const questions = test.modules.reduce((n, m) => n + m.question_ids.length, 0);
+  const questions = formSize(test);
   const minutes = test.modules.reduce((n, m) => n + m.duration_seconds / 60, 0);
   const hasBreak = test.modules.some((m) => m.break_seconds);
   const status = active ? "In progress" : done.length ? "Completed" : "New";
@@ -116,6 +117,9 @@ function TestRow({ test, attempts }: { test: TestForm; attempts: AttemptSummary[
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <h4 className="font-bold">{test.title}</h4>
+          {isAdaptive(test) && (
+            <span className="rounded-full bg-ink px-2 py-px text-[0.6875rem] font-bold text-lime">Adaptive</span>
+          )}
           <span
             className={cn(
               "rounded-full border px-2 py-px text-[0.6875rem] font-bold",
@@ -133,7 +137,7 @@ function TestRow({ test, attempts }: { test: TestForm; attempts: AttemptSummary[
           {test.modules.map((m, i) => (
             <span key={i} className="flex items-center gap-1.5 rounded-lg bg-canvas px-2.5 py-1 text-xs font-medium text-ink-2">
               {m.break_seconds ? <Coffee className="size-3 text-muted" /> : null}
-              M{i + 1} · {m.title} · {m.question_ids.length}q · {m.duration_seconds / 60}m
+              M{i + 1} · {m.title} · {moduleSize(m)}q · {m.duration_seconds / 60}m{m.adaptive ? " · adaptive" : ""}
             </span>
           ))}
         </div>
@@ -150,7 +154,7 @@ function TestRow({ test, attempts }: { test: TestForm; attempts: AttemptSummary[
       </div>
 
       <Link
-        href={`/exam/${test.section}`}
+        href={`/exam/${test.section}?test=${test.id}`}
         className={cn(
           "flex h-11 shrink-0 items-center justify-center gap-2 rounded-full px-6 text-sm font-bold transition",
           active ? "bg-general text-white hover:brightness-95" : "bg-ink text-white hover:bg-ink-2",

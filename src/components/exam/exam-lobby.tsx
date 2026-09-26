@@ -7,6 +7,7 @@ import { Logo } from "@/components/logo";
 import { SectionArt } from "@/components/section-art";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { MAX_VIOLATIONS, SECTION_META } from "@/lib/exam/constants";
+import { formSize, moduleSize } from "@/lib/exam/forms";
 import type { AttemptPayload, TestForm, UsageStatus } from "@/lib/exam/types";
 import { cn } from "@/lib/utils";
 import { ExamRunner } from "./exam-runner";
@@ -36,7 +37,7 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
   const meta = SECTION_META[test.section];
   const resumable = usage?.active.find((a) => a.test_id === test.id);
   const outOfTests = !resumable && (limitHit || (usage ? usage.remaining <= 0 : false));
-  const totalQuestions = test.modules.reduce((n, m) => n + m.question_ids.length, 0);
+  const totalQuestions = formSize(test);
   const totalMinutes = test.modules.reduce((n, m) => n + m.duration_seconds / 60, 0);
 
   async function start() {
@@ -111,7 +112,10 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
                     <span className="grid size-9 place-items-center rounded-xl bg-white text-sm font-bold shadow-sm">{i + 1}</span>
                     <div className="flex-1">
                       <p className="font-semibold">{m.title}</p>
-                      <p className="text-sm text-muted">{m.question_ids.length} questions</p>
+                      <p className="text-sm text-muted">
+                        {moduleSize(m)} questions
+                        {m.adaptive ? " · adapts to your Module " + (m.adaptive.from + 1) + " score" : ""}
+                      </p>
                     </div>
                     <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-2">
                       <Clock className="size-4" /> {m.duration_seconds / 60} min

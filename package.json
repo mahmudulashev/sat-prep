@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed.mts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed:official": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed-official.mts",
+    "extract:official": "python3 scripts/official/extract.py"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

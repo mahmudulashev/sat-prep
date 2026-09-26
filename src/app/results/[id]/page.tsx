@@ -16,7 +16,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { ENGLISH_DOMAINS, MATH_DOMAINS, SECTION_META, STRIKE_TYPES } from "@/lib/exam/constants";
 import { ExamError, getResult } from "@/lib/exam/server";
 import type { AttemptResult } from "@/lib/exam/types";
-import { formatDate, formatDuration, percent } from "@/lib/utils";
+import { cn, formatDate, formatDuration, percent } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Score report" };
 
@@ -110,6 +110,27 @@ export default async function ResultPage({ params }: PageProps<"/results/[id]">)
               {result.english_score !== null && <SectionScore label="Reading and Writing" score={result.english_score} />}
               {result.math_score !== null && <SectionScore label="Math" score={result.math_score} />}
             </div>
+            {result.modules.some((m) => m.route) && (
+              <div className="space-y-1.5 border-t border-line px-6 py-4 text-xs text-muted">
+                {result.modules.map((m, i) =>
+                  m.route ? (
+                    <p key={i} className="flex items-center justify-between gap-3">
+                      <span>
+                        {m.title} · Module {result.modules.slice(0, i + 1).filter((x) => x.subject === m.subject).length}
+                      </span>
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 font-bold",
+                          m.route === "upper" ? "bg-ink text-lime" : "bg-canvas text-ink-2",
+                        )}
+                      >
+                        {m.route === "upper" ? "Harder version" : "Easier version"}
+                      </span>
+                    </p>
+                  ) : null,
+                )}
+              </div>
+            )}
           </div>
 
           <div className="grid content-start gap-5">

@@ -8,7 +8,8 @@ type Token =
   | { kind: "text"; value: string }
   | { kind: "math"; value: string; display: boolean }
   | { kind: "bold" | "italic" | "underline"; children: Token[] }
-  | { kind: "blank" };
+  | { kind: "blank" }
+  | { kind: "image"; id: string; width: number; height: number };
 
 const EMPHASIS = [
   ["**", "bold"],
@@ -50,10 +51,22 @@ function tokenize(input: string): Token[] {
   while (i < input.length) {
     const rest = input.slice(i);
 
-    if (rest.startsWith("\\$")) {
-      buffer += "$";
+    // Backslash escapes a markup character: \$ \* \+ \_ \\
+    if (rest[0] === "\\" && rest.length > 1 && "$*+_\\".includes(rest[1])) {
+      buffer += rest[1];
       i += 2;
       continue;
+    }
+
+    if (rest.startsWith("{{img:")) {
+      const end = input.indexOf("}}", i);
+      const [id, width, height] = (end === -1 ? "" : input.slice(i + 6, end)).split(":");
+      if (id && Number(width) > 0 && Number(height) > 0) {
+        flush();
+        tokens.push({ kind: "image", id, width: Number(width), height: Number(height) });
+        i = end + 2;
+        continue;
+      }
     }
 
     if (rest.startsWith("$$")) {
@@ -136,6 +149,8 @@ function renderTokens(tokens: Token[]): ReactNode[] {
             ______
           </span>
         );
+      case "image":
+        return <QuestionImage key={index} id={token.id} width={token.width} height={token.height} />;
     }
   });
 }
@@ -154,8 +169,26 @@ export function StimulusBlocks({ blocks, className }: { blocks: StimulusBlock[];
   );
 }
 
+/** A cropped image of an official question (equations, graphs, tables). */
+export function QuestionImage({ id, width, height }: { id: string; width: number; height: number }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- served from our own asset route, sized exactly
+    <img
+      src={`/api/asset/${id}`}
+      width={width}
+      height={height}
+      alt=""
+      draggable={false}
+      className="question-image"
+      style={{ aspectRatio: `${width} / ${height}` }}
+    />
+  );
+}
+
 function StimulusBlockView({ block }: { block: StimulusBlock }) {
   switch (block.type) {
+    case "image":
+      return <QuestionImage id={block.asset} width={block.width} height={block.height} />;
     case "text":
       return (
         <div>

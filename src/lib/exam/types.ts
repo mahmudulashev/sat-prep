@@ -8,7 +8,8 @@ export type ChoiceLetter = "A" | "B" | "C" | "D";
 
 /**
  * Question text uses a small inline markup:
- *   *italic*   **bold**   $latex$   ___ (blank line)
+ *   *italic*   **bold**   $latex$   ___ (blank line)   \* (literal)
+ *   {{img:<asset id>:<width>:<height>}} (question image)
  */
 export type RichText = string;
 
@@ -55,7 +56,8 @@ export type StimulusBlock =
   | { type: "text"; text: RichText; title?: string }
   | { type: "table"; title?: string; headers: RichText[]; rows: RichText[][]; note?: RichText }
   | { type: "list"; intro?: RichText; items: RichText[] }
-  | { type: "figure"; figure: Figure; caption?: RichText };
+  | { type: "figure"; figure: Figure; caption?: RichText }
+  | { type: "image"; asset: string; width: number; height: number };
 
 export type ExamQuestion = {
   id: string;
@@ -85,6 +87,9 @@ export type ModuleSummary = {
   /** Break shown before this module starts, in seconds. */
   break_seconds: number;
   question_count: number;
+  /** Adaptive modules get an easier or harder version from the previous module's score. */
+  adaptive?: boolean;
+  route?: "lower" | "upper" | null;
 };
 
 export type TestForm = {
@@ -98,6 +103,7 @@ export type TestForm = {
     duration_seconds: number;
     break_seconds?: number;
     question_ids: string[];
+    adaptive?: { from: number; threshold: number; lower: string[]; upper: string[] };
   }[];
   sort: number;
 };

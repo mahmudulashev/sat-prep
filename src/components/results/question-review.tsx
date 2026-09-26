@@ -175,10 +175,20 @@ function ReviewRow({ item, number, open, onToggle }: { item: ResultItem; number:
                     Your answer: <strong>{item.user_answer || "—"}</strong> · Correct answer: <strong>{item.correct_answer}</strong>
                   </p>
                 )}
-                <div className="mt-5 rounded-xl bg-brand-soft/60 p-4 font-sans text-sm leading-relaxed text-ink-2">
-                  <p className="mb-1 font-bold text-ink">Explanation</p>
-                  <Rich text={item.explanation} />
-                </div>
+                {item.explanation ? (
+                  <div className="mt-5 space-y-3 rounded-xl bg-brand-soft/60 p-4 font-sans text-sm leading-relaxed text-ink-2">
+                    <p className="font-bold text-ink">Explanation</p>
+                    {item.explanation.split("\n\n").map((paragraph, i) => (
+                      <p key={i}>
+                        <Rich text={paragraph} />
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-5 rounded-xl bg-canvas p-4 font-sans text-sm text-muted">
+                    The official answer key gives the correct answer only; this test has no written explanations.
+                  </p>
+                )}
               </div>
             </div>
           </td>

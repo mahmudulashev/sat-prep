@@ -513,7 +513,7 @@ export function ExamRunner({ initial, studentName }: { initial: AttemptPayload; 
   } else {
     body = (
       <div className="h-full overflow-y-auto">
-        <div className="mx-auto max-w-[720px] px-6">{questionColumn}</div>
+        <div className={cn("mx-auto px-6", current.prompt.includes("{{img:") ? "max-w-[960px]" : "max-w-[720px]")}>{questionColumn}</div>
       </div>
     );
   }

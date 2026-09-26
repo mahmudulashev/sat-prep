@@ -10,8 +10,8 @@ export async function generateMetadata({ params }: PageProps<"/exam/[section]">)
   return { title: isSection(section) ? `${SECTION_META[section].name} test` : "Test" };
 }
 
-export default async function ExamPage({ params }: PageProps<"/exam/[section]">) {
-  const { section } = await params;
+export default async function ExamPage({ params, searchParams }: PageProps<"/exam/[section]">) {
+  const [{ section }, query] = await Promise.all([params, searchParams]);
   if (!isSection(section)) notFound();
 
   const [{ supabase, user }, tests, usage] = await Promise.all([
@@ -20,7 +20,8 @@ export default async function ExamPage({ params }: PageProps<"/exam/[section]">)
     getUsage().catch(() => null),
   ]);
 
-  const test = tests.find((t) => t.section === section);
+  const requested = typeof query.test === "string" ? query.test : undefined;
+  const test = tests.find((t) => t.section === section && (!requested || t.id === requested));
   if (!test) notFound();
 
   let studentName = "Guest Student";
