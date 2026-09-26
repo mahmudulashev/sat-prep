@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Serif, Plus_Jakarta_Sans, Roboto } from "next/font/google";
-import "katex/dist/katex.min.css";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -14,6 +13,8 @@ const roboto = Roboto({
   subsets: ["latin"],
   weight: ["300", "400", "500", "700"],
   display: "swap",
+  // Only the test screens use it; don't preload it on every page.
+  preload: false,
 });
 
 const notoSerif = Noto_Serif({
@@ -22,6 +23,7 @@ const notoSerif = Noto_Serif({
   weight: ["400", "700"],
   style: ["normal", "italic"],
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

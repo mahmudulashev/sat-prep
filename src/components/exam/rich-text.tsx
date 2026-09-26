@@ -1,4 +1,5 @@
 import katex from "katex";
+import "katex/dist/katex.min.css";
 import { Fragment, memo, type ReactNode } from "react";
 import type { RichText as RichTextValue, StimulusBlock } from "@/lib/exam/types";
 import { cn } from "@/lib/utils";
@@ -178,6 +179,8 @@ export function QuestionImage({ id, width, height }: { id: string; width: number
       width={width}
       height={height}
       alt=""
+      loading="lazy"
+      decoding="async"
       draggable={false}
       className="question-image"
       style={{ aspectRatio: `${width} / ${height}` }}

@@ -104,6 +104,19 @@ export function ExamRunner({
   const viewRef = useRef(view);
 
   const questions = attempt.questions;
+
+  // Fetch every image in this module up front so moving between questions is instant.
+  useEffect(() => {
+    const ids = new Set(JSON.stringify(questions).match(/\{\{img:[0-9a-f]+/g)?.map((t) => t.slice(6)));
+    for (const q of questions) for (const b of q.stimulus) if (b.type === "image") ids.add(b.asset);
+    const images = [...ids].map((id) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = `/api/asset/${id}`;
+      return img;
+    });
+    return () => images.forEach((img) => (img.src = ""));
+  }, [questions]);
   const current = questions[Math.min(index, questions.length - 1)] as ExamQuestion | undefined;
   const currentModule = attempt.modules[attempt.module_index];
   const title = moduleLabel(attempt.modules, attempt.module_index);
