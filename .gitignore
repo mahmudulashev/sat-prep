@@ -43,6 +43,3 @@ next-env.d.ts
 
 # local-only
 /Ref Images/
-AGENTS.md
-CLAUDE.md
-.claude/
