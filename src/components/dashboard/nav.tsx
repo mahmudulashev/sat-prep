@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { signOut } from "@/app/(auth)/actions";
 import { Logo } from "@/components/logo";
+import { SocialLinks } from "@/components/social-links";
 import { cn } from "@/lib/utils";
 
 const MAIN = [
@@ -30,7 +31,8 @@ export function Sidebar() {
       <div className="mt-6 border-t border-dashed border-line" />
       <NavGroup title="Account" items={ACCOUNT} pathname={pathname} />
 
-      <form action={signOut} className="mt-auto">
+      <SocialLinks className="mt-auto px-1.5 pb-2" />
+      <form action={signOut}>
         <button
           type="submit"
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted transition hover:bg-canvas hover:text-ink"

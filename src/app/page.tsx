@@ -12,6 +12,7 @@ import { FeatureBento } from "@/components/marketing/feature-bento";
 import { CountUp, RevealOnScroll } from "@/components/marketing/reveal";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SectionArt } from "@/components/section-art";
+import { SocialLinks } from "@/components/social-links";
 import { ButtonLink } from "@/components/ui/button";
 import { GUEST_DAILY_LIMIT, MEMBER_DAILY_LIMIT, SECTION_META, SECTIONS } from "@/lib/exam/constants";
 import { getCurrentUser } from "@/lib/supabase/server";
@@ -39,8 +40,11 @@ export default async function Home() {
             <span className="font-semibold text-ink">{SITE_NAME}</span>
             <span>· Digital SAT practice</span>
           </div>
-          <p>SAT is a trademark of the College Board, which is not affiliated with this site.</p>
+          <SocialLinks withHandles />
         </div>
+        <p className="border-t border-line px-4 py-4 text-center text-xs text-muted">
+          SAT is a trademark of the College Board, which is not affiliated with this site.
+        </p>
       </footer>
     </div>
   );
