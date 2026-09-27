@@ -4,8 +4,8 @@ export const GUEST_COOKIE = "sp_gid";
 
 export const LETTERS: ChoiceLetter[] = ["A", "B", "C", "D"];
 
-export const GUEST_DAILY_LIMIT = 1;
-export const MEMBER_DAILY_LIMIT = 3;
+export const GUEST_DAILY_LIMIT = 2;
+export const MEMBER_DAILY_LIMIT = 4;
 
 /** Integrity events allowed before the exam is submitted automatically. */
 export const MAX_VIOLATIONS = 3;

@@ -26,7 +26,7 @@ export default async function DashboardPage() {
           <p className="text-sm font-bold tracking-wide text-brand uppercase">Let&apos;s get started</p>
           <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Take your first practice test</h2>
           <p className="mt-2 max-w-xl text-muted">
-            Your scores, skill breakdowns and progress charts appear here after your first test. You can take up to 3 tests a day.
+            Your scores, skill breakdowns and progress charts appear here after your first test. You can take up to 4 tests a day.
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {SECTIONS.map((s) => (

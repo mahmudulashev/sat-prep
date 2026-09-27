@@ -80,7 +80,7 @@ export default async function ResultPage({ params }: PageProps<"/results/[id]">)
           <div className="flex flex-col items-start justify-between gap-4 rounded-3xl bg-lime p-6 sm:flex-row sm:items-center">
             <div>
               <p className="font-bold text-ink">This report won&apos;t be saved to a profile.</p>
-              <p className="text-sm text-ink/70">Create a free account to keep every result, track progress and take 3 tests a day.</p>
+              <p className="text-sm text-ink/70">Create a free account to keep every result, track progress and take 4 tests a day.</p>
             </div>
             <ButtonLink href="/signup" variant="dark">
               Create free account

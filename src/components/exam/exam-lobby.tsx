@@ -177,7 +177,7 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
                 </p>
                 <p className="mt-1 text-white/70">
                   {usage?.is_guest
-                    ? "Create a free account to take up to 3 tests a day and save your results."
+                    ? "Create a free account to take up to 4 tests a day and save your results."
                     : `Your limit resets in ${usage ? hoursUntil(usage.resets_at) : "a few hours"}.`}
                 </p>
                 {usage?.is_guest && (
@@ -212,11 +212,11 @@ export function ExamLobby({ test, usage, studentName, signedIn }: Props) {
               <p className="mt-4 text-sm text-muted">
                 {usage.is_guest ? (
                   <>
-                    Guests get 1 test a day and results aren&apos;t saved.{" "}
+                    Guests get 2 tests a day and results aren&apos;t saved.{" "}
                     <Link href={`/signup?next=/exam/${test.section}`} className="font-semibold text-brand hover:underline">
                       Sign up
                     </Link>{" "}
-                    for 3 tests a day with saved progress.
+                    for 4 tests a day with saved progress.
                   </>
                 ) : (
                   <>Testing as {studentName}. Every result is saved to your dashboard.</>

@@ -242,7 +242,7 @@ function Plans({ signedIn }: { signedIn: boolean }) {
         <div data-reveal="zoom" className="rounded-3xl bg-surface p-8 shadow-card">
           <p className="text-sm font-semibold text-muted">Guest</p>
           <p className="mt-2 text-4xl font-extrabold">
-            {GUEST_DAILY_LIMIT} <span className="text-lg font-semibold text-muted">test / day</span>
+            {GUEST_DAILY_LIMIT} <span className="text-lg font-semibold text-muted">tests / day</span>
           </p>
           <ul className="mt-6 space-y-3 text-sm text-ink-2">
             <PlanItem>No sign-up needed</PlanItem>

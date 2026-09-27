@@ -21,7 +21,7 @@ export function AuthForm({ mode, next, notice }: { mode: Mode; next?: string; no
       <h1 className="text-3xl font-extrabold tracking-tight">{isSignup ? "Create your account" : "Welcome back"}</h1>
       <p className="mt-2 text-sm text-muted">
         {isSignup
-          ? "Take up to 3 tests a day and keep every result."
+          ? "Take up to 4 tests a day and keep every result."
           : "Sign in to continue your SAT practice."}
       </p>
 
