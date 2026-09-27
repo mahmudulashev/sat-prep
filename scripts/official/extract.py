@@ -319,7 +319,57 @@ def join_lines(lines: list[Line]) -> str:
     out = re.sub(MARK_START + r"\s*", " ++", out)
     # Some end markers carry their own period.
     out = re.sub(r"\s*" + MARK_END + r"\s*\.?", "++ ", out)
-    return re.sub(r"\s+", " ", out).strip()
+    out = re.sub(r"\s+", " ", out).strip()
+    # Some PDFs repeat the whole marked sentence once per printed line.
+    out = re.sub(r"(\+\+(.+?)\+\+)(?:\s*\+\+\2\+\+)+", r"\1", out)
+    return re.sub(r"\+\+(.+?)\+\+", lambda m: "++" + mend_marked(m.group(1)) + "++", out)
+
+
+SHORT_WORDS = {"a", "i", "am", "an", "as", "at", "be", "by", "do", "go", "he", "if", "in", "is", "it", "me", "my", "no",
+               "of", "oh", "on", "or", "so", "to", "up", "us", "we"}
+SMALL_WORDS = {"of", "the", "and", "to", "in", "a", "is", "are", "was", "for", "on", "that", "with", "as", "by", "it",
+               "an", "or", "at", "from"}
+
+
+def known_word(word: str) -> bool:
+    """A dictionary word, allowing common endings (the word list has few inflections)."""
+    w = word.lower()
+    if len(w) <= 2:
+        return w in SHORT_WORDS
+    if is_word(w):
+        return True
+    for suffix, repl in (("ies", "y"), ("ied", "y"), ("es", ""), ("s", ""), ("ed", ""), ("ed", "e"), ("d", ""),
+                         ("ing", ""), ("ing", "e"), ("ly", ""), ("er", ""), ("est", "")):
+        if w.endswith(suffix) and is_word(w[: -len(suffix)] + repl):
+            return True
+    return False
+
+
+def mend_marked(text: str) -> str:
+    """Repairs the text of an underlined part, where the hidden markers shift
+    the text layer: words split by a space ("gover nments"), words run
+    together ("conceptof") and spaces before punctuation."""
+    text = re.sub(r" ([,.;:])", r"\1", text)
+    words = text.split(" ")
+    out: list[str] = []
+    for word in words:
+        prev = out[-1] if out else ""
+        a, b = re.sub(r"^\W+", "", prev), re.sub(r"\W+$", "", word)
+        if (
+            a.isalpha() and b.isalpha() and b.islower() and prev == prev.rstrip(",.;:—")
+            and known_word(a + b) and not (known_word(a) and known_word(b))
+        ):
+            out[-1] = prev + word
+            continue
+        core = re.sub(r"\W+$", "", word)
+        if core.isalpha() and core.islower() and not known_word(core):
+            for i in range(1, len(core)):
+                left, right = core[:i], core[i:]
+                if (left in SMALL_WORDS and known_word(right)) or (right in SMALL_WORDS and known_word(left)):
+                    word = left + " " + right + word[len(core):]
+                    break
+        out.append(word)
+    return " ".join(out)
 
 
 def paragraphs(lines: list[Line]) -> list[list[Line]]:
@@ -1743,13 +1793,15 @@ def mock_forms(questions: list[dict], bank: list[dict]) -> list[dict]:
     return forms
 
 
-# Practice test 4's hidden text layer spells out symbols ("28 percent sign")
-# and drops letters inside its underlined sentences. These were checked
-# against the printed pages.
+# Practice test 4's hidden text layer spells out symbols ("28 percent sign"),
+# and a few words come out wrong in other tests. These were checked against
+# the printed pages.
 SPOKEN_SYMBOLS = [(r"(\d) percent sign", r"\1%"), (r"dollar sign (\d)", r"\\$\1")]
 MANUAL_FIXES: dict[str, list[tuple[str, str]]] = {
     "pt4-rw1-08": [("continents.++ 2001,", "continents.++ Around 2001,")],
     "pt4-rw2-09": [("Female cuckos have been sen quickly", "Female cuckoos have been seen quickly")],
+    "pt5-rw2-06": [("he and an other man", "he and another man")],
+    "pt5-rw1-20": [("Lê Lươ ng Minh", "Lê Lương Minh")],
 }
 
 
