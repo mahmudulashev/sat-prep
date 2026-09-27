@@ -557,7 +557,8 @@ def figure_regions(page: fitz.Page, clip: fitz.Rect, lines: list[Line], ignore: 
                 near = -2 <= fig.y0 - line.bbox.y1 <= 12 or -2 <= line.bbox.y0 - fig.y1 <= 12
                 # Titles, legends and table rows are short or have wide gaps;
                 # passage lines run the width of the column.
-                sentence = len(line.text.split()) >= 5 and re.search(r"[.?]\s*$", line.text) is not None
+                words = len(line.text.split())
+                sentence = words >= 8 or (words >= 5 and re.search(r"[.?]\s*$", line.text) is not None)
                 tabular = (max_gap(line) >= 8 or line.bbox.width < width * 0.6) and not sentence
                 # Axis labels sit just left or right of the plotted area.
                 beside = fig.y0 - 2 <= c.y <= fig.y1 + 2 and (
@@ -998,23 +999,24 @@ def build_book(n: int, store: AssetStore) -> tuple[list[dict], list[dict]]:
                 return (spot.line.bbox.y0 + spot.line.bbox.y1) / 2
 
             def cut_between(si: int, y_lo: float, y_hi: float, default: float) -> float:
+                # Text boxes of some math fonts are much taller than the
+                # letters and overlap, so look at the rendered ink instead.
                 seg = q.segments[si]
-                spans = sorted(
-                    (max(r.y0, y_lo), min(r.y1, y_hi))
-                    for r in [l.bbox for l in seg.lines] + seg.drawn
-                    if r.y1 > y_lo and r.y0 < y_hi and r.height < (y_hi - y_lo)
-                )
-                best, cursor = None, y_lo
-                for a, b in spans:
-                    if a > cursor and (best is None or a - cursor > best[1] - best[0]):
-                        best = (cursor, a)
-                    cursor = max(cursor, b)
-                return (best[0] + best[1]) / 2 if best and best[1] - best[0] >= 1 else default
+                return ink_gap(seg.page, fitz.Rect(seg.rect.x0, y_lo, seg.rect.x1, y_hi), default)
 
             stem_end = end
             if is_mcq:
                 a = letters["A"]
-                stem_end = (a.si, cut_between(a.si, max(q.segments[a.si].rect.y0, a.line.bbox.y0 - 30), row_mid(a), a.line.bbox.y0 - 2))
+                # Search between the middle of the stem's last line and choice A.
+                above = [
+                    (l.bbox.y0 + l.bbox.y1) / 2
+                    for l in q.segments[a.si].lines
+                    # Stem lines start at the margin; a fraction's numerator
+                    # in choice A sits above its label but further right.
+                    if (l.bbox.y0 + l.bbox.y1) / 2 < a.line.bbox.y0 - 1 and l.bbox.x0 <= a.line.bbox.x0 + 3
+                ]
+                y_lo = max([q.segments[a.si].rect.y0, a.line.bbox.y0 - 40] + ([max(above)] if above else []))
+                stem_end = (a.si, cut_between(a.si, y_lo, row_mid(a), a.line.bbox.y0 - 2))
             # Each choice spans from the cut above it to the cut above the next
             # row of labels, and from its label to the next label on the same row.
             choice_ranges = []
@@ -1241,17 +1243,25 @@ def answer_from_rationale(text: str) -> str:
     return m.group(1) if m else ""
 
 
-def widest_gap(rects: list[fitz.Rect], y_lo: float, y_hi: float, default: float) -> float:
-    """Middle of the widest empty horizontal band between y_lo and y_hi."""
-    spans = sorted((max(r.y0, y_lo), min(r.y1, y_hi)) for r in rects if r.y1 > y_lo and r.y0 < y_hi and r.height < y_hi - y_lo)
-    best, cursor = None, y_lo
-    for a, b in spans:
-        if a > cursor and (best is None or a - cursor > best[1] - best[0]):
-            best = (cursor, a)
-        cursor = max(cursor, b)
-    if y_hi > cursor and (best is None or y_hi - cursor > best[1] - best[0]):
-        best = (cursor, y_hi)
-    return (best[0] + best[1]) / 2 if best and best[1] - best[0] >= 1 else default
+def ink_gap(page: fitz.Page, area: fitz.Rect, default: float) -> float:
+    """Middle of the widest blank horizontal band in an area of the rendered page."""
+    if area.height < 1 or area.width < 1:
+        return default
+    zoom = 4
+    pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), clip=area, colorspace=fitz.csGRAY, alpha=False)
+    w, data = pix.width, pix.samples
+    blank = [min(data[y * w : (y + 1) * w]) > 200 for y in range(pix.height)]
+    best, start = None, None
+    for y, empty in enumerate(blank + [False]):
+        if empty and start is None:
+            start = y
+        elif not empty and start is not None:
+            if best is None or y - start > best[1] - best[0]:
+                best = (start, y)
+            start = None
+    if not best or best[1] - best[0] < 2:
+        return default
+    return area.y0 + (best[0] + best[1]) / 2 / zoom
 
 
 ODD_CHAR = re.compile(r"[\ue000-\uf8ff\ufffd]")
@@ -1303,11 +1313,19 @@ def ink_rows(ink: list[fitz.Rect], join: float = 2.5) -> list[list[float]]:
     return rows
 
 
-def flow_token(page: fitz.Page, rows: list[list[float]], ink: list[fitz.Rect], bounds: fitz.Rect, store: AssetStore) -> str:
+def flow_token(
+    page: fitz.Page, rows: list[list[float]], ink: list[fitz.Rect], bounds: fitz.Rect, store: AssetStore, avoid: list[fitz.Rect] = ()
+) -> str:
     """A paragraph of drawn math as one image cut into word-sized pieces, so
     the page can wrap it like text at its full size:
     {{flow:<asset>:<width>:<height>:x,y,w,h;...}} in CSS pixels."""
     top, bottom = rows[0][0] - 1.5, rows[-1][1] + 1.5
+    # Keep the lines of a table or graph just above or below out of the crop.
+    for f in avoid:
+        if top < f.y1 <= rows[0][0]:
+            top = f.y1 + 0.3
+        if rows[-1][1] <= f.y0 < bottom:
+            bottom = f.y0 - 0.3
     xs = [r.x0 for r in ink] + [r.x1 for r in ink]
     crop = fitz.Rect(min(xs) - 1, top, max(xs) + 1, bottom) & bounds
     asset = store.crop(page, crop, BANK_SCALE)
@@ -1322,6 +1340,9 @@ def flow_token(page: fitz.Page, rows: list[list[float]], ink: list[fitz.Rect], b
             else:
                 words.append([a, b])
         band_top, band_bottom = max(y0 - 1.2, crop.y0), min(y1 + 1.2, crop.y1)
+        for f in avoid:
+            if band_top < f.y1 <= y0 + 0.5:
+                band_top = f.y1 + 0.3
         for a, b in words:
             x0, x1 = max(a - 0.6, crop.x0), min(b + 0.6, crop.x1)
             pieces.append(
@@ -1335,8 +1356,21 @@ def bank_math_stem(page: fitz.Page, rect: fitz.Rect, lines: list[Line], store: A
     rest (text with drawn math) becomes word-by-word flowing image pieces so it
     wraps to the column at the normal size. The last block is the prompt."""
     figures, _ = figure_regions(page, rect, lines, [])
+    # Axis labels can come out as separate small figures next to the graph.
+    figures = cluster(figures, 20)
+    # An embedded picture's box can reach over the next sentence; a sentence
+    # running out past the figure's edge is not part of it.
+    for fi, f in enumerate(figures):
+        for line in lines:
+            if len(line.text.split()) >= 5 and line.bbox.intersects(f) and line.bbox.x1 > f.x1 + 20:
+                mid = (line.bbox.y0 + line.bbox.y1) / 2
+                if mid > (f.y0 + f.y1) / 2:
+                    # Parentheses and exponents rise above the text box.
+                    f = fitz.Rect(f.x0, f.y0, f.x1, min(f.y1, line.bbox.y0 - 5))
+                else:
+                    f = fitz.Rect(f.x0, max(f.y0, line.bbox.y1 + 0.5), f.x1, f.y1)
+        figures[fi] = f
     ink = [r for r in ink_rects(page, rect) if not any(pad(f, 1, page.rect).contains((r.tl + r.br) / 2) for f in figures)]
-    items: list[tuple[float, dict]] = [(f.y0, image_block(store.crop(page, pad(f, 1.5, rect), BANK_SCALE))) for f in figures]
     paragraph: list[list[float]] = []
     groups: list[list[list[float]]] = []
     for row in ink_rows(ink):
@@ -1346,9 +1380,29 @@ def bank_math_stem(page: fitz.Page, rect: fitz.Rect, lines: list[Line], store: A
         paragraph.append(row)
     if paragraph:
         groups.append(paragraph)
-    for group in groups:
-        mine = [r for r in ink if group[0][0] - 0.1 <= (r.y0 + r.y1) / 2 <= group[-1][1] + 0.1]
-        items.append((group[0][0], {"type": "text", "text": flow_token(page, group, mine, rect, store)}))
+    # Labels next to a graph (tick numbers, axis names, point names) are drawn
+    # like text; a group of them lying within the graph's width, close to it,
+    # belongs to the graph. Sentences start at the margin and run wider.
+    parts = [(group, [r for r in ink if group[0][0] - 0.1 <= (r.y0 + r.y1) / 2 <= group[-1][1] + 0.1]) for group in groups]
+    merged: set[int] = set()
+    changed = True
+    while changed:
+        changed = False
+        for gi, (group, mine) in enumerate(parts):
+            box = content_box([], mine)
+            if gi in merged or box is None:
+                continue
+            for fi, f in enumerate(figures):
+                if pad(f, 14, page.rect).intersects(box) and box.x0 >= f.x0 - 30 and box.x1 <= f.x1 + 30:
+                    figures[fi] = f | box
+                    merged.add(gi)
+                    changed = True
+                    break
+    items: list[tuple[float, dict]] = []
+    for gi, (group, mine) in enumerate(parts):
+        if gi not in merged:
+            items.append((group[0][0], {"type": "text", "text": flow_token(page, group, mine, rect, store, figures)}))
+    items += [(f.y0, image_block(store.crop(page, pad(f, 1.5, rect), BANK_SCALE))) for f in figures]
     items.sort(key=lambda it: it[0])
     blocks = [b for _, b in items]
     if not blocks:
@@ -1403,10 +1457,9 @@ def build_bank(file: Path, subject: str, store: AssetStore) -> list[dict]:
             # choice label, so neighbouring parts are split at the widest
             # empty band between them rather than at a label's top edge.
             def split_above(si: int, rect: fitz.Rect, floor: float) -> float:
-                pg, reg = item.segments[si]
-                content = [l.bbox for l in seg_lines[si]] + drawings_in(pg, reg)
+                pg, _ = item.segments[si]
                 mid = (rect.y0 + rect.y1) / 2
-                return widest_gap(content, max(floor, mid - 40), mid, rect.y0 - 3)
+                return ink_gap(pg, fitz.Rect(rect.x0, max(floor, mid - 40), pg.rect.width - 12, mid), rect.y0 - 3)
 
             stem_bottom = until(qsi, ["Answer", "A", "Correct", "Rationale"])
             # Choice A starts below the "Answer" heading when there is one.
@@ -1432,7 +1485,7 @@ def build_bank(file: Path, subject: str, store: AssetStore) -> list[dict]:
                         top = split_above(si, rect, lab[LETTERS[i - 1]][1].y1)
                     if i < 3 and lab[LETTERS[i + 1]][0] == si:
                         bottom = split_above(si, lab[LETTERS[i + 1]][1], rect.y1)
-                    choice_spots.append((pg, fitz.Rect(rect.x1 + 3, top, pg.rect.width - 12, bottom)))
+                    choice_spots.append((pg, fitz.Rect(rect.x1 + 1.2, top, pg.rect.width - 12, bottom)))
 
             record: dict = {
                 "id": f"qb-{item.qid}",
