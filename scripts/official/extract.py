@@ -1743,6 +1743,40 @@ def mock_forms(questions: list[dict], bank: list[dict]) -> list[dict]:
     return forms
 
 
+# Practice test 4's hidden text layer spells out symbols ("28 percent sign")
+# and drops letters inside its underlined sentences. These were checked
+# against the printed pages.
+SPOKEN_SYMBOLS = [(r"(\d) percent sign", r"\1%"), (r"dollar sign (\d)", r"\\$\1")]
+MANUAL_FIXES: dict[str, list[tuple[str, str]]] = {
+    "pt4-rw1-08": [("continents.++ 2001,", "continents.++ Around 2001,")],
+    "pt4-rw2-09": [("Female cuckos have been sen quickly", "Female cuckoos have been seen quickly")],
+}
+
+
+def apply_fixes(q: dict) -> None:
+    def fix(text: str) -> str:
+        if q["id"].startswith("pt4-"):
+            for pattern, repl in SPOKEN_SYMBOLS:
+                text = re.sub(pattern, repl, text)
+        for old, new in MANUAL_FIXES.get(q["id"], []):
+            text = text.replace(old, new)
+        return text
+
+    for block in q["stimulus"]:
+        for key in ("text", "intro", "title"):
+            if key in block:
+                block[key] = fix(block[key])
+        if "items" in block:
+            block["items"] = [fix(item) for item in block["items"]]
+    q["prompt"] = fix(q["prompt"])
+    if q["choices"]:
+        q["choices"] = [fix(c) for c in q["choices"]]
+    text = json.dumps(q, ensure_ascii=False)
+    for old, new in MANUAL_FIXES.get(q["id"], []):
+        if new not in text:
+            warn(f"{q['id']}: manual fix no longer applies: {old!r}")
+
+
 def main() -> None:
     store = AssetStore()
     questions: list[dict] = []
@@ -1768,6 +1802,9 @@ def main() -> None:
     # Only the adaptive mocks are listed; other forms stay unlisted.
     forms = [{**f, "listed": False} for f in forms + adaptive_forms(bank)]
     forms += mock_forms(questions, bank)
+
+    for q in questions:
+        apply_fixes(q)
 
     ids = [q["id"] for q in questions]
     if len(ids) != len(set(ids)):
