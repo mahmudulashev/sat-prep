@@ -55,11 +55,6 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   };
   if (!parsed.success) return { error: parsed.error.issues[0]?.message, fields };
 
-  // This is a private site: new accounts are not open to the public.
-  if (process.env.SIGNUPS_CLOSED !== "false") {
-    return { error: "Sign-ups are closed. This site is private — ask the owner for access.", fields };
-  }
-
   const origin = (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL;
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
