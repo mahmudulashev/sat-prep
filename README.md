@@ -62,17 +62,14 @@ Limits are enforced in the database (guests by cookie and hashed IP) and reset e
 ## 🏗️ How it works
 
 ```mermaid
-flowchart LR
-    B[Browser<br/>Next.js client] -->|answers, autosave| A[Next.js route handlers<br/>/api/exam/*]
-    A -->|RPC with server secret| P[(Supabase Postgres)]
-    P -->|questions without keys| A
-    subgraph P2 [Postgres functions]
-      L[daily limits]
-      S[question selection<br/>and adaptive modules]
-      G[timing and grading]
-    end
-    P --- P2
-    B <-->|auth session| AU[Supabase Auth]
+flowchart TD
+    B["🖥️ Browser (Next.js client)"] -->|answers and autosave| A["⚙️ Next.js route handlers /api/exam/*"]
+    B <-->|auth session| AU["🔑 Supabase Auth"]
+    A -->|RPC with server secret| P[("🗄️ Supabase Postgres")]
+    P -->|questions without answer keys| A
+    P --> L["Daily limits"]
+    P --> S["Question selection and adaptive modules"]
+    P --> G["Timing and grading"]
 ```
 
 - The browser only ever receives question content — never the answers.
