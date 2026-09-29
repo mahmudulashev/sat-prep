@@ -136,7 +136,12 @@ export function useLockdown({ active, initial = [], maxStrikes, onLimitReached }
       if (document.visibilityState === "hidden") record("tab-hidden");
     };
 
-    const onBlur = () => record("window-blur");
+    // Clicking into an embedded frame (the Desmos calculator) also blurs the
+    // window; that is not leaving the test.
+    const onBlur = () =>
+      window.setTimeout(() => {
+        if (document.activeElement?.tagName !== "IFRAME") record("window-blur");
+      });
 
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();

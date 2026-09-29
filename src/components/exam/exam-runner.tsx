@@ -99,6 +99,10 @@ export function ExamRunner({
   const [navOpen, setNavOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+  // Once opened, the calculator stays mounted (just hidden) so its work survives closing it.
+  const [calculatorMounted, setCalculatorMounted] = useState(false);
+  const [calculatorExpanded, setCalculatorExpanded] = useState(false);
+  if (calculatorOpen && !calculatorMounted) setCalculatorMounted(true);
   const [referenceOpen, setReferenceOpen] = useState(false);
   const [referenceExpanded, setReferenceExpanded] = useState(false);
   const [highlightsHint, setHighlightsHint] = useState(false);
@@ -597,9 +601,19 @@ export function ExamRunner({
       />
 
       <div className="relative flex min-h-0 flex-1">
-        {calculatorOpen && (
-          <aside className="w-[min(420px,40vw)] shrink-0 border-r border-[#cfcfcf] shadow-[2px_0_8px_rgba(0,0,0,0.08)]">
-            <CalculatorPanel onClose={() => setCalculatorOpen(false)} />
+        {calculatorMounted && (
+          <aside
+            hidden={!calculatorOpen}
+            className={cn(
+              "shrink-0 border-r border-[#cfcfcf] shadow-[2px_0_8px_rgba(0,0,0,0.08)]",
+              calculatorExpanded ? "w-[min(760px,60vw)]" : "w-[min(440px,40vw)]",
+            )}
+          >
+            <CalculatorPanel
+              expanded={calculatorExpanded}
+              onToggleExpanded={() => setCalculatorExpanded((v) => !v)}
+              onClose={() => setCalculatorOpen(false)}
+            />
           </aside>
         )}
         <div className="flex min-w-0 flex-1 flex-col">

@@ -28,7 +28,7 @@ exam — with adaptive modules, exam lockdown, server-side scoring and detailed 
 | --- | --- |
 | 🧪 **Real exam structure** | Math (2 × 22 questions, 35 min), Reading and Writing (2 × 27 questions, 32 min) and full-length tests with a 10-minute break, scored 400–1600 |
 | 🔀 **Adaptive modules** | Module 2 gets easier or harder depending on your Module 1 score, just like the digital SAT |
-| 🖥️ **Familiar test interface** | Resizable passage split, answer eliminator, mark for review, question navigator, Check Your Work page, highlighter, line reader, graphing and scientific calculator, reference sheet |
+| 🖥️ **Familiar test interface** | Resizable passage split, answer eliminator, mark for review, question navigator, Check Your Work page, highlighter, line reader, Desmos graphing and scientific calculator (College Board edition), reference sheet |
 | 🔒 **Exam lockdown** | Full screen only, copy/paste and dev-tools shortcuts blocked, tab-switch detection — 3 warnings and the test submits itself; every event is logged |
 | 🛡️ **Server-side scoring** | Answer keys never reach the browser. Timing, grading and daily limits all run in Postgres |
 | 📊 **Score reports** | Scaled scores, domain breakdown, skill radar, difficulty and timing charts, plus a full question review with explanations |
@@ -163,7 +163,7 @@ Math questions are stored as images cropped from the PDFs.
 src/
   app/            routes: landing, auth, dashboard, exam, results, API handlers
   components/     exam runner, charts, dashboard, marketing and UI components
-  lib/            Supabase clients, exam engine client, calculator, helpers
+  lib/            Supabase clients, exam engine client, helpers
 content/          sample questions and test forms
 supabase/         SQL migrations and seed
 scripts/          content seeding and official-content extraction
