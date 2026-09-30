@@ -1,15 +1,9 @@
-import {
-  ArrowRight,
-  ArrowUpRight,
-  BarChart3,
-  Check,
-  Clock,
-  Lock,
-} from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check } from "lucide-react";
 import Link from "next/link";
 import { LogoMark } from "@/components/logo";
 import { FeatureBento } from "@/components/marketing/feature-bento";
-import { CountUp, RevealOnScroll } from "@/components/marketing/reveal";
+import { LiveScore, LiveTools, PencilUnderline } from "@/components/marketing/live-hero";
+import { LoopWhenVisible, RevealOnScroll } from "@/components/marketing/reveal";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SectionArt } from "@/components/section-art";
 import { SocialLinks } from "@/components/social-links";
@@ -24,6 +18,7 @@ export default async function Home() {
   return (
     <div className="min-h-screen" data-page-scale="landing">
       <RevealOnScroll />
+      <LoopWhenVisible />
       <SiteHeader signedIn={Boolean(user)} />
 
       <main className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
@@ -52,7 +47,7 @@ export default async function Home() {
 
 function Hero({ signedIn }: { signedIn: boolean }) {
   return (
-    <section className="grid gap-4 pt-8 sm:pt-12 short:pt-6 lg:grid-cols-[1.55fr_1fr]">
+    <section data-loop className="grid gap-4 pt-8 sm:pt-12 short:pt-6 lg:grid-cols-[1.55fr_1fr]">
       <div className="flex flex-col gap-4">
         <div className="relative animate-fade-up overflow-hidden rounded-3xl bg-lime p-7 sm:p-10 short:py-8">
           <Link
@@ -95,83 +90,15 @@ function Hero({ signedIn }: { signedIn: boolean }) {
             <p className="text-2xl leading-snug font-light text-ink-2 sm:text-[1.7rem]">
               Practice perfect,
               <br />
-              achieve excellence.
+              achieve <PencilUnderline>excellence.</PencilUnderline>
             </p>
           </div>
-          <div className="grid animate-fade-up grid-cols-3 gap-2 rounded-3xl bg-surface p-5 shadow-card [animation-delay:140ms]">
-            {[
-              { icon: Clock, label: "Timed" },
-              { icon: Lock, label: "Locked" },
-              { icon: BarChart3, label: "Scored" },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-canvas py-4">
-                <Icon className="size-5 text-brand" />
-                <span className="text-xs font-semibold text-ink-2">{label}</span>
-              </div>
-            ))}
-          </div>
+          <LiveTools />
         </div>
       </div>
 
-      <ScorePreview />
+      <LiveScore />
     </section>
-  );
-}
-
-function ScorePreview() {
-  const trend = [1080, 1130, 1120, 1190, 1240, 1230, 1310, 1340];
-  const max = 1400;
-  const min = 1000;
-  const points = trend
-    .map((v, i) => `${(i / (trend.length - 1)) * 240 + 10},${90 - ((v - min) / (max - min)) * 80}`)
-    .join(" ");
-
-  return (
-    <div className="relative flex animate-fade-up flex-col overflow-hidden rounded-3xl bg-surface p-3 shadow-card [animation-delay:60ms]">
-      <div className="rounded-[1.4rem] bg-gradient-to-br from-[#1f2468] to-[#2d3494] p-6 text-white">
-        <div className="flex items-center justify-between">
-          <span className="text-2xl font-extrabold tracking-tight">SAT</span>
-          <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">Combined · Test 1</span>
-        </div>
-        <p className="mt-6 text-center text-xs font-bold tracking-[0.14em] text-white/70 short:mt-4">TOTAL SCORE</p>
-        <p className="text-center text-6xl font-extrabold tracking-tight">
-          <CountUp from={400} to={1340} delay={250} duration={1800} />
-        </p>
-        <p className="text-center text-xs text-white/60">400–1600</p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 p-4">
-        <div className="rounded-2xl bg-english-soft p-4">
-          <p className="text-xs font-semibold text-ink-2">Reading and Writing</p>
-          <p className="mt-1 text-2xl font-extrabold">
-            <CountUp from={200} to={680} delay={450} />
-          </p>
-        </div>
-        <div className="rounded-2xl bg-math-soft p-4">
-          <p className="text-xs font-semibold text-ink-2">Math</p>
-          <p className="mt-1 text-2xl font-extrabold">
-            <CountUp from={200} to={660} delay={550} />
-          </p>
-        </div>
-      </div>
-
-      <div className="mx-4 mb-4 flex flex-1 flex-col rounded-2xl bg-canvas p-4">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold">Score trend</p>
-          <span className="inline-block animate-pop rounded-full bg-lime px-2 py-0.5 text-xs font-bold [--d:1.9s]">+260</span>
-        </div>
-        <svg viewBox="0 0 260 100" preserveAspectRatio="none" className="mt-2 min-h-24 w-full flex-1 animate-sweep [--d:600ms]" aria-hidden>
-          <defs>
-            <linearGradient id="trend-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#6c5ce7" stopOpacity="0.25" />
-              <stop offset="1" stopColor="#6c5ce7" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <polygon points={`10,100 ${points} 250,100`} fill="url(#trend-fill)" />
-          <polyline points={points} fill="none" stroke="#6c5ce7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-        </svg>
-      </div>
-    </div>
   );
 }
 
@@ -183,7 +110,7 @@ function Tests() {
         title="Three ways to practice"
         body="Each test runs in a locked, full-screen interface with the same tools you'll see on test day."
       />
-      <div className="mt-10 grid gap-5 md:grid-cols-3">
+      <div data-loop className="mt-10 grid gap-5 md:grid-cols-3">
         {SECTIONS.map((section, i) => {
           const meta = SECTION_META[section];
           return (
@@ -192,7 +119,7 @@ function Tests() {
                 href={`/exam/${section}`}
                 className="group flex flex-1 flex-col rounded-3xl bg-surface p-3 shadow-card ring-1 ring-transparent transition hover:-translate-y-1 hover:ring-line"
               >
-                <SectionArt section={section} className="aspect-[16/10] rounded-[1.3rem]" />
+                <SectionArt section={section} live className="aspect-[16/10] rounded-[1.3rem]" />
                 <div className="flex flex-1 flex-col p-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold">{meta.name}</h3>

@@ -1,16 +1,25 @@
 import type { Section } from "@/lib/exam/types";
 import { cn } from "@/lib/utils";
 
-/** Soft, flat illustrations used on section and test cards. */
-export function SectionArt({ section, className }: { section: Section; className?: string }) {
+/**
+ * Soft, flat illustrations used on section and test cards. With `live`, small
+ * parts of each illustration loop gently (see `.loop-*` in globals.css).
+ */
+export function SectionArt({ section, live = false, className }: { section: Section; live?: boolean; className?: string }) {
   return (
     <div className={cn("relative overflow-hidden", className)}>
-      {section === "math" && <MathArt />}
-      {section === "english" && <EnglishArt />}
-      {section === "general" && <GeneralArt />}
+      {section === "math" && <MathArt live={live} />}
+      {section === "english" && <EnglishArt live={live} />}
+      {section === "general" && <GeneralArt live={live} />}
     </div>
   );
 }
+
+type ArtProps = { live: boolean };
+
+/** Adds a loop class (and its delay) only on live illustrations. */
+const loop = (live: boolean, name: string, delay = 0) =>
+  live ? { className: name, style: { "--d": `${delay}ms` } as React.CSSProperties } : {};
 
 function Frame({ from, to, children }: { from: string; to: string; children: React.ReactNode }) {
   const id = `g-${from.slice(1)}-${to.slice(1)}`;
@@ -39,7 +48,7 @@ function Frame({ from, to, children }: { from: string; to: string; children: Rea
   );
 }
 
-function MathArt() {
+function MathArt({ live }: ArtProps) {
   return (
     <Frame from="#9b8cff" to="#6c5ce7">
       <rect x="78" y="38" width="164" height="112" rx="14" fill="#fff" />
@@ -47,24 +56,34 @@ function MathArt() {
       <circle cx="94" cy="49" r="3.5" fill="#ff8fb1" />
       <circle cx="105" cy="49" r="3.5" fill="#ffd166" />
       <circle cx="116" cy="49" r="3.5" fill="#7ee3c6" />
-      <rect x="96" y="112" width="14" height="24" rx="3" fill="#c9c1ff" />
-      <rect x="116" y="96" width="14" height="40" rx="3" fill="#a597ff" />
-      <rect x="136" y="104" width="14" height="32" rx="3" fill="#c9c1ff" />
-      <rect x="156" y="82" width="14" height="54" rx="3" fill="#7b6cff" />
-      <path d="M182 128 C196 118 204 86 226 76" stroke="#ff8fb1" strokeWidth="4" fill="none" strokeLinecap="round" />
-      <circle cx="226" cy="76" r="5" fill="#ff8fb1" />
+      <rect x="96" y="112" width="14" height="24" rx="3" fill="#c9c1ff" {...loop(live, "loop-bars", 0)} />
+      <rect x="116" y="96" width="14" height="40" rx="3" fill="#a597ff" {...loop(live, "loop-bars", 110)} />
+      <rect x="136" y="104" width="14" height="32" rx="3" fill="#c9c1ff" {...loop(live, "loop-bars", 220)} />
+      <rect x="156" y="82" width="14" height="54" rx="3" fill="#7b6cff" {...loop(live, "loop-bars", 330)} />
+      <path
+        d="M182 128 C196 118 204 86 226 76"
+        pathLength={1}
+        stroke="#ff8fb1"
+        strokeWidth="4"
+        fill="none"
+        strokeLinecap="round"
+        {...loop(live, "loop-draw", 500)}
+      />
+      <circle cx="226" cy="76" r="5" fill="#ff8fb1" {...loop(live, "loop-pop", 700)} />
       <path d="M244 150 L286 150 L244 104 Z" fill="#e3f86b" />
       <path d="M252 142 L270 142 L252 122 Z" fill="#9b8cff" opacity="0.5" />
-      <circle cx="54" cy="150" r="18" fill="#fff" opacity="0.95" />
-      <text x="54" y="157" textAnchor="middle" fontSize="20" fontWeight="700" fill="#6c5ce7" fontFamily="serif" fontStyle="italic">
-        x²
-      </text>
-      <circle cx="270" cy="46" r="10" fill="#ffd166" />
+      <g {...loop(live, "loop-float", 0)}>
+        <circle cx="54" cy="150" r="18" fill="#fff" opacity="0.95" />
+        <text x="54" y="157" textAnchor="middle" fontSize="20" fontWeight="700" fill="#6c5ce7" fontFamily="serif" fontStyle="italic">
+          x²
+        </text>
+      </g>
+      <circle cx="270" cy="46" r="10" fill="#ffd166" {...loop(live, "loop-float", 1200)} />
     </Frame>
   );
 }
 
-function EnglishArt() {
+function EnglishArt({ live }: ArtProps) {
   return (
     <Frame from="#4fd8c4" to="#0f9f8f">
       <path d="M72 58 Q116 44 160 60 L160 156 Q116 142 72 156 Z" fill="#fff" />
@@ -75,21 +94,24 @@ function EnglishArt() {
       {[76, 90, 104].map((y) => (
         <rect key={`r${y}`} x="176" y={y} width="54" height="5" rx="2.5" fill="#bdeee6" />
       ))}
-      <rect x="176" y="118" width="30" height="8" rx="2" fill="#ffd166" />
-      <g transform="rotate(38 250 70)">
-        <rect x="236" y="30" width="14" height="92" rx="4" fill="#ff8fb1" />
-        <path d="M236 122 L250 122 L243 138 Z" fill="#ffe4ec" />
-        <rect x="236" y="30" width="14" height="14" rx="4" fill="#11132a" opacity="0.8" />
+      {/* The highlight is laid down as the pencil sweeps across it */}
+      <rect x="176" y="118" width="30" height="8" rx="2" fill="#ffd166" {...loop(live, "loop-mark", 0)} />
+      <g {...loop(live, "loop-write", 0)}>
+        <g transform="rotate(38 250 70)">
+          <rect x="236" y="30" width="14" height="92" rx="4" fill="#ff8fb1" />
+          <path d="M236 122 L250 122 L243 138 Z" fill="#ffe4ec" />
+          <rect x="236" y="30" width="14" height="14" rx="4" fill="#11132a" opacity="0.8" />
+        </g>
       </g>
-      <text x="52" y="72" fontSize="54" fontWeight="800" fill="#e3f86b" fontFamily="serif">
+      <text x="52" y="72" fontSize="54" fontWeight="800" fill="#e3f86b" fontFamily="serif" {...loop(live, "loop-float", 400)}>
         “
       </text>
-      <circle cx="58" cy="160" r="9" fill="#e3f86b" />
+      <circle cx="58" cy="160" r="9" fill="#e3f86b" {...loop(live, "loop-float", 1600)} />
     </Frame>
   );
 }
 
-function GeneralArt() {
+function GeneralArt({ live }: ArtProps) {
   return (
     <Frame from="#ffc56b" to="#f59e0b">
       <rect x="112" y="44" width="120" height="96" rx="14" fill="#fff" opacity="0.55" transform="rotate(-8 172 92)" />
@@ -97,14 +119,27 @@ function GeneralArt() {
       <text x="124" y="118" fontSize="46" fontWeight="800" fill="#7b6cff" fontFamily="serif">
         A
       </text>
-      <circle cx="186" cy="100" r="24" fill="#fff4dd" />
-      <path d="M186 100 L186 76 A24 24 0 0 1 208 108 Z" fill="#14b8a6" />
-      <path d="M186 100 L208 108 A24 24 0 0 1 170 118 Z" fill="#ff8fb1" />
+      <g {...loop(live, "loop-spin", 0)}>
+        <circle cx="186" cy="100" r="24" fill="#fff4dd" />
+        <path d="M186 100 L186 76 A24 24 0 0 1 208 108 Z" fill="#14b8a6" />
+        <path d="M186 100 L208 108 A24 24 0 0 1 170 118 Z" fill="#ff8fb1" />
+      </g>
       <rect x="116" y="134" width="88" height="6" rx="3" fill="#ffe2a8" />
-      <rect x="236" y="120" width="40" height="40" rx="10" fill="#e3f86b" />
-      <path d="M246 140 l7 7 l13 -15" stroke="#11132a" strokeWidth="3.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="62" cy="58" r="14" fill="#fff" opacity="0.9" />
-      <circle cx="62" cy="58" r="6" fill="#7b6cff" />
+      <rect x="236" y="120" width="40" height="40" rx="10" fill="#e3f86b" {...loop(live, "loop-pop", 900)} />
+      <path
+        d="M246 140 l7 7 l13 -15"
+        pathLength={1}
+        stroke="#11132a"
+        strokeWidth="3.5"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        {...loop(live, "loop-draw", 1300)}
+      />
+      <g {...loop(live, "loop-float", 800)}>
+        <circle cx="62" cy="58" r="14" fill="#fff" opacity="0.9" />
+        <circle cx="62" cy="58" r="6" fill="#7b6cff" />
+      </g>
     </Frame>
   );
 }

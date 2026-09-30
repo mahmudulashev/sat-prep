@@ -339,6 +339,172 @@ mark[data-hl][data-underline="true"] {
   transition: background-size 0.9s cubic-bezier(0.6, 0, 0.2, 1) var(--d, 300ms);
 }
 
+/*
+ * Looping "living tile" motion. Each loop is a short story that plays, rests
+ * and repeats. Loops inside a `[data-loop]` block pause while it is off
+ * screen, and none of them run with reduced motion: the resting frame of every
+ * loop is the finished illustration.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  [data-loop]:not([data-playing]) :is(.loop-bars, .loop-draw, .loop-float, .loop-spin, .loop-write, .loop-mark, .loop-pop) {
+    animation-play-state: paused;
+  }
+
+  .loop-bars {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: loop-bars 6s cubic-bezier(0.3, 0.7, 0.2, 1) infinite;
+    animation-delay: var(--d, 0ms);
+  }
+  .loop-draw {
+    stroke-dasharray: 1;
+    animation: loop-draw 6s cubic-bezier(0.6, 0, 0.2, 1) infinite;
+    animation-delay: var(--d, 0ms);
+  }
+  .loop-float {
+    transform-box: fill-box;
+    animation: loop-float 5s ease-in-out infinite;
+    animation-delay: var(--d, 0ms);
+  }
+  .loop-spin {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: loop-spin 6s cubic-bezier(0.6, 0, 0.2, 1) infinite;
+    animation-delay: var(--d, 0ms);
+  }
+  .loop-write {
+    animation: loop-write 6s ease-in-out infinite;
+    animation-delay: var(--d, 0ms);
+  }
+  .loop-mark {
+    transform-box: fill-box;
+    transform-origin: left;
+    animation: loop-mark 6s cubic-bezier(0.6, 0, 0.2, 1) infinite;
+    animation-delay: var(--d, 0ms);
+  }
+  .loop-pop {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: loop-pop 6s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+    animation-delay: var(--d, 0ms);
+  }
+}
+
+@keyframes loop-bars {
+  0%,
+  62%,
+  100% {
+    transform: scaleY(1);
+  }
+  14% {
+    transform: scaleY(0.3);
+  }
+  34% {
+    transform: scaleY(1.08);
+  }
+  46% {
+    transform: scaleY(1);
+  }
+}
+@keyframes loop-draw {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  30%,
+  80% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  92%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes loop-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+@keyframes loop-spin {
+  0%,
+  55% {
+    transform: rotate(0deg);
+  }
+  80%,
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes loop-write {
+  0%,
+  45%,
+  100% {
+    transform: translate(0, 0);
+  }
+  9% {
+    transform: translate(-28px, 3px);
+  }
+  30% {
+    transform: translate(2px, 3px);
+  }
+}
+@keyframes loop-mark {
+  0%,
+  10% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  30%,
+  80% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  92%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+@keyframes loop-pop {
+  0%,
+  40%,
+  100% {
+    transform: scale(1);
+  }
+  48% {
+    transform: scale(0.6);
+  }
+  58% {
+    transform: scale(1.18);
+  }
+  66% {
+    transform: scale(1);
+  }
+}
+
+@keyframes clock-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes lock-shut {
+  0% {
+    transform: translateY(-4px);
+  }
+  60% {
+    transform: translateY(1px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
 /* Nav links glide to their section on the landing page */
 @media (prefers-reduced-motion: no-preference) {
   html:has([data-page-scale="landing"]) {

@@ -38,6 +38,45 @@ export function RevealOnScroll() {
   return null;
 }
 
+/**
+ * Plays the looping motion inside each `[data-loop]` block only while it is on
+ * screen, by setting `data-playing` (for CSS loops) and pausing any SVG
+ * animations it contains. With reduced motion SVG animations are parked on
+ * their finished frame instead.
+ */
+export function LoopWhenVisible() {
+  useEffect(() => {
+    const blocks = [...document.querySelectorAll<HTMLElement>("[data-loop]")];
+    const svgs = (el: Element) => [...el.querySelectorAll("svg")].filter((s) => s.querySelector("animate, animateMotion"));
+
+    if (prefersReducedMotion()) {
+      for (const block of blocks) {
+        for (const svg of svgs(block)) {
+          svg.setCurrentTime(Number(svg.dataset.restAt ?? 0));
+          svg.pauseAnimations();
+        }
+      }
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const el = entry.target as HTMLElement;
+        if (entry.isIntersecting) el.dataset.playing = "";
+        else delete el.dataset.playing;
+        for (const svg of svgs(el)) {
+          if (entry.isIntersecting) svg.unpauseAnimations();
+          else svg.pauseAnimations();
+        }
+      }
+    });
+    blocks.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  return null;
+}
+
 /** Counts up to `to` once visible. The final value is rendered on the server. */
 export function CountUp({ to, from = 0, duration = 1400, delay = 0 }: { to: number; from?: number; duration?: number; delay?: number }) {
   const ref = useRef<HTMLSpanElement>(null);

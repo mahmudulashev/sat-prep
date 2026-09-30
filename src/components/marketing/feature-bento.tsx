@@ -6,7 +6,7 @@ const delay = (ms: number) => ({ "--d": `${ms}ms` }) as React.CSSProperties;
 /** Landing-page features, each shown as a small live-looking preview of the product. */
 export function FeatureBento() {
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div data-loop className="grid gap-4 lg:grid-cols-3">
       <Tile className="lg:col-span-2" delay={0} eyebrow="Real test layout" title="The interface you'll see on test day">
         <TestPreview />
       </Tile>
@@ -172,9 +172,9 @@ function CalculatorPreview() {
         ))}
         <line x1="0" y1="95" x2="300" y2="95" stroke="#1e1e1e" strokeWidth="1.2" />
         <line x1="140" y1="0" x2="140" y2="150" stroke="#1e1e1e" strokeWidth="1.2" />
-        <path d="M60 10 Q140 180 220 10" pathLength={1} className="on-show-draw" style={delay(400)} fill="none" stroke="#2d70b3" strokeWidth="2.5" />
-        <line x1="40" y1="140" x2="260" y2="30" pathLength={1} className="on-show-draw" style={delay(800)} stroke="#c74440" strokeWidth="2.5" />
-        <circle cx="183" cy="73.5" r="4.5" className="on-show-pop" style={delay(1900)} fill="#1e1e1e" stroke="#fff" strokeWidth="2" />
+        <path d="M60 10 Q140 180 220 10" pathLength={1} className="loop-draw" style={delay(0)} fill="none" stroke="#2d70b3" strokeWidth="2.5" />
+        <line x1="40" y1="140" x2="260" y2="30" pathLength={1} className="loop-draw" style={delay(400)} stroke="#c74440" strokeWidth="2.5" />
+        <circle cx="183" cy="73.5" r="4.5" className="loop-pop" style={delay(0)} fill="#1e1e1e" stroke="#fff" strokeWidth="2" />
       </svg>
       <div className="space-y-px bg-[#f3f3f3] font-serif text-[0.75rem] italic">
         <p className="flex items-center gap-2 bg-white px-3 py-2">
