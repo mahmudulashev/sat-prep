@@ -86,9 +86,9 @@ export function aggregateDomains(attempts: AttemptSummary[]) {
 }
 
 
-/** An unfinished attempt whose module timer is still running. */
+/** An unfinished attempt whose module timer is still running (or paused, when the deadline is "infinity"). */
 export function isRunning(attempt: AttemptSummary) {
-  return attempt.status === "in_progress" && new Date(attempt.deadline).getTime() > Date.now();
+  return attempt.status === "in_progress" && (attempt.deadline === "infinity" || new Date(attempt.deadline).getTime() > Date.now());
 }
 
 /** Whole days from today until a YYYY-MM-DD date (negative once it has passed). */

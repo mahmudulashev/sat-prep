@@ -20,10 +20,10 @@ import { Highlightable, type Highlight } from "./highlighter";
 import { Choices, QuestionBar, SplitPane, SprDirections, SprInput } from "./question-parts";
 import { ReferenceSheet } from "./reference-sheet";
 import { StimulusBlocks, Rich } from "./rich-text";
-import { BreakScreen, CheckYourWork, Finished, LineReader, LockdownOverlay, ModuleOver } from "./screens";
-import { exitFullscreen, useLockdown } from "./use-lockdown";
+import { BreakScreen, CheckYourWork, Finished, LineReader, LockdownOverlay, ModuleOver, PausedScreen } from "./screens";
+import { enterFullscreen, exitFullscreen, FULLSCREEN_REQUIRED, useLockdown } from "./use-lockdown";
 
-type View = "question" | "review" | "module-over" | "break" | "finished";
+type View = "question" | "review" | "module-over" | "break" | "paused" | "finished";
 type Local = { eliminated: Record<string, ChoiceLetter[]>; highlights: Record<string, Highlight[]> };
 
 const storageKey = (attemptId: string) => `satify:attempt:${attemptId}`;
@@ -82,7 +82,9 @@ export function ExamRunner({
   signedIn?: boolean;
 }) {
   const [attempt, setAttempt] = useState(initial);
-  const [view, setView] = useState<View>(initial.break_until ? "break" : "question");
+  const [view, setView] = useState<View>(initial.paused ? "paused" : initial.break_until ? "break" : "question");
+  // Where to go back to when a paused module is resumed.
+  const resumeView = useRef<"question" | "review">("question");
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>(initial.answers ?? {});
   const [flagged, setFlagged] = useState<string[]>(initial.flagged ?? []);
@@ -140,7 +142,8 @@ export function ExamRunner({
   const current = questions[Math.min(index, questions.length - 1)] as ExamQuestion | undefined;
   const currentModule = attempt.modules[attempt.module_index];
   const title = moduleLabel(attempt.modules, attempt.module_index);
-  const active = view !== "finished" && view !== "module-over";
+  // Lockdown and autosave are off while the test is paused (the server refuses saves then anyway).
+  const active = view !== "finished" && view !== "module-over" && view !== "paused";
 
   /* ------------------------------------------------------------------ */
   /* Progress + persistence                                              */
@@ -165,6 +168,8 @@ export function ExamRunner({
     maxStrikes: MAX_VIOLATIONS,
     onLimitReached: () => endExamRef.current("The test was submitted automatically after repeated integrity warnings."),
   });
+
+  const resumeLockdown = lockdown.resume;
 
   const progress = useCallback((): ProgressBody => {
     flushTime();
@@ -327,7 +332,7 @@ export function ExamRunner({
   // Clock tick. When time runs out the module is submitted (the server allows
   // a short grace period); when a break ends the next module starts.
   useEffect(() => {
-    if (view === "finished") return;
+    if (view === "finished" || view === "paused") return;
     const id = window.setInterval(() => {
       const serverNow = Date.now() + offsetRef.current;
       const next = {
@@ -363,6 +368,53 @@ export function ExamRunner({
       setBusy(false);
     }
   }, [attempt.attempt_id, finish]);
+
+  /** Keeps the module but takes the new clock (deadline, pause state) from the server. */
+  const applyClock = useCallback((next: AttemptPayload) => {
+    offsetRef.current = new Date(next.server_now).getTime() - Date.now();
+    setClock(clockFor(next));
+    setAttempt((a) => ({ ...a, deadline: next.deadline, paused: next.paused, break_until: next.break_until, server_now: next.server_now }));
+  }, []);
+
+  const pause = useCallback(async () => {
+    if (submitting.current || busy) return;
+    setBusy(true);
+    setNavOpen(false);
+    setMoreOpen(false);
+    try {
+      const next = await postJson<AttemptState>(`/api/exam/${attempt.attempt_id}/pause`, progressRef.current());
+      if (next.status === "completed") return void (await finish(next.attempt_id));
+      applyClock(next);
+      if (next.paused) {
+        resumeView.current = viewRef.current === "review" ? "review" : "question";
+        setView("paused");
+      }
+      setSaveError(false);
+    } catch {
+      setSaveError(true);
+    } finally {
+      setBusy(false);
+    }
+  }, [applyClock, attempt.attempt_id, busy, finish]);
+
+  const resume = useCallback(async () => {
+    setBusy(true);
+    // Back to full screen first, while the click still counts as a user gesture. Through the
+    // lockdown, so a refusal shows its "return to full screen" prompt.
+    if (FULLSCREEN_REQUIRED && !unrestricted) await resumeLockdown();
+    else await enterFullscreen();
+    try {
+      const next = await postJson<AttemptState>(`/api/exam/${attempt.attempt_id}/resume`);
+      if (next.status === "completed") return void (await finish(next.attempt_id));
+      applyClock(next);
+      questionStart.current = Date.now();
+      setView(next.break_until ? "break" : resumeView.current);
+    } catch {
+      setSaveError(true);
+    } finally {
+      setBusy(false);
+    }
+  }, [applyClock, attempt.attempt_id, finish, resumeLockdown, unrestricted]);
 
   /* ------------------------------------------------------------------ */
   /* Navigation + answers                                                */
@@ -568,7 +620,7 @@ export function ExamRunner({
     );
   }
 
-  const showLockdown = !lockdown.isFullscreen || lockdown.warning !== null;
+  const showLockdown = view !== "paused" && (!lockdown.isFullscreen || lockdown.warning !== null);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-white select-none">
@@ -598,6 +650,8 @@ export function ExamRunner({
           else setModal(item);
         }}
         lineReaderOn={lineReader}
+        onPause={pause}
+        pauseBusy={busy}
       />
 
       <div className="relative flex min-h-0 flex-1">
@@ -753,6 +807,11 @@ export function ExamRunner({
         </ExamModal>
       )}
 
+      {view === "paused" && (
+        <div className="fixed inset-0 z-[70]">
+          <PausedScreen remaining={remaining} onResume={resume} busy={busy} />
+        </div>
+      )}
       {showLockdown && (
         <LockdownOverlay
           reason={lockdown.warning}

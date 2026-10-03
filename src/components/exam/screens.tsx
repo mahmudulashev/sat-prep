@@ -83,6 +83,37 @@ export function BreakScreen({ remaining, onResume, busy }: { remaining: number; 
   );
 }
 
+/** Shown while the module clock is paused; the questions stay hidden until the student resumes. */
+export function PausedScreen({ remaining, onResume, busy }: { remaining: number; onResume: () => void; busy: boolean }) {
+  return (
+    <div className="grid h-screen place-items-center bg-[#1e1e1e] px-6 font-exam text-white">
+      <div className="grid w-full max-w-5xl items-center gap-12 md:grid-cols-2">
+        <div className="flex flex-col items-center">
+          <div className="rounded-xl border border-white/40 px-12 py-8 text-center">
+            <p className="text-[18px]">Time Left in This Module:</p>
+            <p className="mt-2 text-[64px] font-bold tabular-nums">{formatClock(remaining)}</p>
+          </div>
+          <YellowButton className="mt-8 px-10" onClick={onResume} disabled={busy}>
+            Resume Testing
+          </YellowButton>
+        </div>
+        <div className="space-y-5 text-[17px] leading-relaxed">
+          <h2 className="text-[26px] font-bold">Test Paused</h2>
+          <p>
+            The clock is stopped and your answers are saved. The questions are hidden until you resume, so you can step away
+            without losing time.
+          </p>
+          <p>
+            You can leave full screen or close this page while the test is paused. When you come back, the module continues
+            with the same time left.
+          </p>
+          <p className="text-white/60">On test day the clock can&apos;t be paused. This is a practice-only feature.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const CONFETTI_COLORS = ["#f7c948", "#d2567a", "#7fd3e0", "#9aa4e8", "#f7c948", "#7fd3e0"];
 
 /** Deterministic pseudo-random numbers, so confetti renders the same on every pass. */

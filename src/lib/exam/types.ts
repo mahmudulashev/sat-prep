@@ -117,6 +117,8 @@ export type AttemptPayload = {
   status: "in_progress";
   started_at: string;
   deadline: string;
+  /** The module clock is stopped; `deadline` is then where it would end if resumed now. */
+  paused?: boolean;
   /** Set while the student is on a break before the current module. */
   break_until: string | null;
   server_now: string;

@@ -10,6 +10,7 @@ import {
   LogOut,
   MoreVertical,
   NotebookPen,
+  Pause,
   X,
 } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
@@ -111,6 +112,8 @@ export function ExamHeader({
   onMore,
   lineReaderOn,
   hideTools,
+  onPause,
+  pauseBusy,
 }: {
   title: string;
   subject: Subject;
@@ -126,6 +129,9 @@ export function ExamHeader({
   onMore: (item: "help" | "shortcuts" | "line-reader" | "exit") => void;
   lineReaderOn: boolean;
   hideTools?: boolean;
+  /** Stops the module clock; the button is hidden when not given. */
+  onPause?: () => void;
+  pauseBusy?: boolean;
 }) {
   const warning = remaining <= 5 * 60;
   const directionsRef = useDismiss(directionsOpen, onToggleDirections);
@@ -173,13 +179,25 @@ export function ExamHeader({
               {formatClock(remaining)}
             </span>
           )}
-          <button
-            type="button"
-            onClick={onToggleTimer}
-            className="mt-0.5 rounded-full border border-bb-ink px-3 py-px text-[12px] font-bold hover:bg-black/5"
-          >
-            {timerHidden ? "Show" : "Hide"}
-          </button>
+          <div className="mt-0.5 flex gap-1.5">
+            <button
+              type="button"
+              onClick={onToggleTimer}
+              className="rounded-full border border-bb-ink px-3 py-px text-[12px] font-bold hover:bg-black/5"
+            >
+              {timerHidden ? "Show" : "Hide"}
+            </button>
+            {onPause && (
+              <button
+                type="button"
+                onClick={onPause}
+                disabled={pauseBusy}
+                className="flex items-center gap-1 rounded-full border border-bb-ink px-3 py-px text-[12px] font-bold hover:bg-black/5 disabled:opacity-50"
+              >
+                <Pause className="size-3" fill="currentColor" strokeWidth={0} /> Pause
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center justify-end gap-5">

@@ -160,7 +160,7 @@ export async function saveProgress(attemptId: string, body: ProgressBody) {
     ...progressArgs(body),
   });
   if (error) throw toExamError(error);
-  return data as { status: string; deadline: string; server_now: string };
+  return data as { status: string; deadline: string; paused: boolean; server_now: string };
 }
 
 /** Finishes the current module; returns the next module or a completed state. */
@@ -179,6 +179,30 @@ export async function submitModule(attemptId: string, body: ProgressBody): Promi
 export async function endBreak(attemptId: string): Promise<AttemptState> {
   const ctx = await getExamContext();
   const { data, error } = await ctx.supabase.rpc("end_break", {
+    p_secret: ctx.secret,
+    p_attempt_id: attemptId,
+    p_guest_key: ctx.guestKey,
+  });
+  if (error) throw toExamError(error);
+  return data as unknown as AttemptState;
+}
+
+/** Saves the work so far and stops the module clock. */
+export async function pauseAttempt(attemptId: string, body: ProgressBody): Promise<AttemptState> {
+  const ctx = await getExamContext();
+  const { data, error } = await ctx.supabase.rpc("pause_attempt", {
+    p_secret: ctx.secret,
+    p_attempt_id: attemptId,
+    p_guest_key: ctx.guestKey,
+    ...progressArgs(body),
+  });
+  if (error) throw toExamError(error);
+  return data as unknown as AttemptState;
+}
+
+export async function resumeAttempt(attemptId: string): Promise<AttemptState> {
+  const ctx = await getExamContext();
+  const { data, error } = await ctx.supabase.rpc("resume_attempt", {
     p_secret: ctx.secret,
     p_attempt_id: attemptId,
     p_guest_key: ctx.guestKey,

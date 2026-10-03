@@ -180,6 +180,22 @@ export type Database = {
         Args: { p_attempt_id: string; p_guest_key?: string; p_secret: string };
         Returns: Json;
       };
+      pause_attempt: {
+        Args: {
+          p_answers?: Json;
+          p_attempt_id: string;
+          p_flagged?: string[];
+          p_guest_key?: string;
+          p_secret: string;
+          p_time_spent?: Json;
+          p_violations?: Json;
+        };
+        Returns: Json;
+      };
+      resume_attempt: {
+        Args: { p_attempt_id: string; p_guest_key?: string; p_secret: string };
+        Returns: Json;
+      };
       save_progress: {
         Args: {
           p_answers?: Json;
