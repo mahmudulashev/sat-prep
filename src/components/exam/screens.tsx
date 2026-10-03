@@ -83,7 +83,7 @@ export function BreakScreen({ remaining, onResume, busy }: { remaining: number; 
   );
 }
 
-/** Shown while the module clock is paused; the questions stay hidden until the student resumes. */
+/** Shown while the module clock is paused (signed-in students only); the questions stay hidden until the student resumes. */
 export function PausedScreen({ remaining, onResume, busy }: { remaining: number; onResume: () => void; busy: boolean }) {
   return (
     <div className="grid h-screen place-items-center bg-[#1e1e1e] px-6 font-exam text-white">

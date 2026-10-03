@@ -650,7 +650,7 @@ export function ExamRunner({
           else setModal(item);
         }}
         lineReaderOn={lineReader}
-        onPause={pause}
+        onPause={signedIn ? pause : undefined}
         pauseBusy={busy}
       />
 
