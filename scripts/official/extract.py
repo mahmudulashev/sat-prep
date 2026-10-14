@@ -1858,6 +1858,37 @@ MANUAL_FIXES: dict[str, list[tuple[str, str]]] = {
 }
 
 
+# Question bank items whose text could not be laid out cleanly (words out of
+# order, stray formula fragments) are replaced by original questions on the
+# same skill and difficulty, written as text with KaTeX math.
+REPLACED_QUESTIONS: dict[str, dict] = {
+    "qb-371cbf6b": {
+        "type": "mcq",
+        "stimulus": [],
+        "prompt": "$$(ax + 2)(3x^2 - bx + 5) = 12x^3 - 2x^2 + 16x + 10$$The equation above is true for all values of $x$, where $a$ and $b$ are constants. What is the value of $ab$?",
+        "choices": ["$6$", "$8$", "$12$", "$16$"],
+        "answer": {"choice": "B"},
+        "explanation": "Compare the $x^3$ terms: $3a = 12$, so $a = 4$. The $x^2$ terms on the left are $-abx^2 + 6x^2$, so $-4b + 6 = -2$ and $b = 2$. Check the $x$ terms: $5a - 2b = 20 - 4 = 16$, which matches. So $ab = 4 \\cdot 2 = 8$.",
+    },
+    "qb-3cdbf026": {
+        "type": "mcq",
+        "stimulus": [],
+        "prompt": "The graph of the equation $px + ky = 12$ is a line in the $xy$-plane, where $p$ and $k$ are constants. If the line contains the points $(-3, 1)$ and $(3, 5)$, what is the value of $p$?",
+        "choices": ["$-\\dfrac{8}{3}$", "$-\\dfrac{3}{8}$", "$\\dfrac{3}{8}$", "$\\dfrac{8}{3}$"],
+        "answer": {"choice": "A"},
+        "explanation": "Substitute both points: $-3p + k = 12$ and $3p + 5k = 12$. Adding the equations gives $6k = 24$, so $k = 4$. Then $-3p + 4 = 12$, so $-3p = 8$ and $p = -\\dfrac{8}{3}$.",
+    },
+    "qb-40c09d66": {
+        "type": "spr",
+        "stimulus": [],
+        "prompt": "$$\\dfrac{\\sqrt[3]{x^{7}}}{\\sqrt{x^{3}}} = x^{\\frac{a}{b}}$$The equation above is true for all positive values of $x$, where $a$ and $b$ are positive integers. What is the value of $\\dfrac{a}{b}$?",
+        "choices": None,
+        "answer": {"value": 5 / 6, "values": [5 / 6], "accepted": ["5/6", ".8333", ".8334", "0.833"]},
+        "explanation": "Write each root as a power: $\\sqrt[3]{x^7} = x^{\\frac{7}{3}}$ and $\\sqrt{x^3} = x^{\\frac{3}{2}}$. Dividing subtracts the exponents: $\\dfrac{7}{3} - \\dfrac{3}{2} = \\dfrac{14}{6} - \\dfrac{9}{6} = \\dfrac{5}{6}$.",
+    },
+}
+
+
 def apply_fixes(q: dict) -> None:
     def fix(text: str) -> str:
         if q["id"].startswith("pt4-"):
@@ -1910,6 +1941,9 @@ def main() -> None:
 
     for q in questions:
         apply_fixes(q)
+        q.update(REPLACED_QUESTIONS.get(q["id"], {}))
+    for qid in REPLACED_QUESTIONS.keys() - {q["id"] for q in questions}:
+        warn(f"{qid}: replaced question no longer exists")
 
     ids = [q["id"] for q in questions]
     if len(ids) != len(set(ids)):
