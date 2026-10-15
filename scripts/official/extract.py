@@ -1846,6 +1846,69 @@ def mock_forms(questions: list[dict], bank: list[dict]) -> list[dict]:
     return forms
 
 
+# A second set of question bank exports (Math only, one file per domain). Its
+# items build mocks of their own, drawn only from items not already in the
+# first bank.
+BANK2_FILES = ["bank2-algebra.pdf", "bank2-advanced-math.pdf", "bank2-data-analysis.pdf", "bank2-geometry.pdf"]
+
+# Items whose word-piece layout came out wrong (split numbers like "1 1",
+# lines out of order, scattered axis labels, missing minus signs on graphs).
+# They were found by comparing every item with its source and are left out.
+BANK2_SKIP = {
+    "qb-13294295", "qb-af2ba762", "qb-b8cbe394", "qb-8368afd1", "qb-203774bc", "qb-2c88af4d", "qb-a0b4103e",
+    "qb-f2d60b99", "qb-67f4b449", "qb-b03adde3", "qb-ad7dbb22", "qb-73ddfdac", "qb-912cd125", "qb-61b87506",
+    "qb-d5f349b7", "qb-babd7461", "qb-81b664bc", "qb-947a3cde", "qb-df71424b", "qb-36b6f8ba",
+}
+
+# Share of each Math domain in a module, as on the digital SAT.
+MATH_DOMAINS = {"Algebra": 7, "Advanced Math": 7, "Problem-Solving and Data Analysis": 4, "Geometry and Trigonometry": 4}
+
+
+def bank_mock_forms(pool: list[dict], first_number: int) -> list[dict]:
+    """Adaptive Math mocks made only of question bank items. Module 1 mixes all
+    difficulties; Module 2's easier version is easy and medium items, the
+    harder one medium and hard items. Each module follows the SAT domain mix."""
+    pool = sorted(pool, key=lambda q: q["id"])
+    levels = {
+        "m1": {"easy": 7, "medium": 8, "hard": 7},
+        "lower": {"easy": 11, "medium": 11, "hard": 0},
+        "upper": {"easy": 0, "medium": 8, "hard": 14},
+    }
+
+    def module(plan: dict[str, int]) -> list[str]:
+        chosen: list[dict] = []
+        need = dict(MATH_DOMAINS)
+        for level in ("hard", "medium", "easy"):  # scarcest level first
+            for _ in range(plan[level]):
+                options = [d for d in need if need[d] > 0 and any(q["domain"] == d and q["difficulty"] == level for q in pool)]
+                if not options:
+                    raise RuntimeError(f"Not enough {level} question bank items for a mock")
+                d = max(options, key=lambda d: need[d])
+                q = next(q for q in pool if q["domain"] == d and q["difficulty"] == level)
+                pool.remove(q)
+                chosen.append(q)
+                need[d] -= 1
+        # Easier first, as on the test; domains interleave within a level.
+        return [q["id"] for q in sorted(chosen, key=lambda q: (LEVEL[q["difficulty"]], q["id"]))]
+
+    forms = []
+    n = first_number
+    while len(pool) >= 66:
+        m1, lower, upper = module(levels["m1"]), module(levels["lower"]), module(levels["upper"])
+        base = {"title": "Math", "subject": "math", "duration_seconds": 35 * 60}
+        forms.append({
+            "id": f"mock-math-{n}", "section": "math", "title": f"Math Mock Test {n}", "sort": n, "listed": True,
+            "description": "Two adaptive 35-minute modules of 22 questions, built from official question bank items.",
+            "modules": [
+                {**base, "break_seconds": 0, "question_ids": m1},
+                {**base, "break_seconds": 0, "question_ids": [], "adaptive": {"from": 0, "threshold": 0.6, "lower": lower, "upper": upper}},
+            ],
+        })
+        n += 1
+        break  # one mock for now; the rest of the pool stays in reserve
+    return forms
+
+
 # Practice test 4's hidden text layer spells out symbols ("28 percent sign"),
 # and a few words come out wrong in other tests. These were checked against
 # the printed pages.
@@ -2063,6 +2126,21 @@ def main() -> None:
     # Only the adaptive mocks are listed; other forms stay unlisted.
     forms = [{**f, "listed": False} for f in forms + adaptive_forms(bank)]
     forms += mock_forms(questions, bank)
+
+    known = {q["id"] for q in questions}
+    bank2: list[dict] = []
+    for name in BANK2_FILES:
+        if not (BANK / name).exists():
+            continue
+        items = [q for q in build_bank(BANK / name, "math", store) if q["id"] not in known and q["id"] not in BANK2_SKIP]
+        print(f"Question bank {name}: {len(items)} new questions")
+        known |= {q["id"] for q in items}
+        bank2 += items
+    if bank2:
+        mocks2 = bank_mock_forms(bank2, first_number=len(MOCKS["math"]) + 1)
+        used2 = {qid for f in mocks2 for m in f["modules"] for qid in m["question_ids"] + m.get("adaptive", {}).get("lower", []) + m.get("adaptive", {}).get("upper", [])}
+        questions += [q for q in bank2 if q["id"] in used2]
+        forms += mocks2
 
     for q in questions:
         apply_fixes(q)
