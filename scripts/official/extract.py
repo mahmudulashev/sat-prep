@@ -1864,11 +1864,19 @@ BANK2_SKIP = {
 MATH_DOMAINS = {"Algebra": 7, "Advanced Math": 7, "Problem-Solving and Data Analysis": 4, "Geometry and Trigonometry": 4}
 
 
+# Question ids of the bank mocks already published, so adding more bank files
+# never reshuffles them. New mocks are drawn from what is left and saved here.
+BANK_MOCKS = Path(__file__).with_name("bank-mocks.json")
+
+
 def bank_mock_forms(pool: list[dict], first_number: int) -> list[dict]:
     """Adaptive Math mocks made only of question bank items. Module 1 mixes all
     difficulties; Module 2's easier version is easy and medium items, the
-    harder one medium and hard items. Each module follows the SAT domain mix."""
+    harder one medium and hard items. Each module follows the SAT domain mix.
+    Items not used yet stay in reserve for later mocks."""
     pool = sorted(pool, key=lambda q: q["id"])
+    by_id = {q["id"]: q for q in pool}
+    saved: dict[str, dict[str, list[str]]] = json.loads(BANK_MOCKS.read_text()) if BANK_MOCKS.exists() else {}
     levels = {
         "m1": {"easy": 7, "medium": 8, "hard": 7},
         "lower": {"easy": 11, "medium": 11, "hard": 0},
@@ -1891,21 +1899,39 @@ def bank_mock_forms(pool: list[dict], first_number: int) -> list[dict]:
         # Easier first, as on the test; domains interleave within a level.
         return [q["id"] for q in sorted(chosen, key=lambda q: (LEVEL[q["difficulty"]], q["id"]))]
 
-    forms = []
-    n = first_number
-    while len(pool) >= 66:
-        m1, lower, upper = module(levels["m1"]), module(levels["lower"]), module(levels["upper"])
+    def form(n: int, parts: dict[str, list[str]]) -> dict:
         base = {"title": "Math", "subject": "math", "duration_seconds": 35 * 60}
-        forms.append({
+        return {
             "id": f"mock-math-{n}", "section": "math", "title": f"Math Mock Test {n}", "sort": n, "listed": True,
             "description": "Two adaptive 35-minute modules of 22 questions, built from official question bank items.",
             "modules": [
-                {**base, "break_seconds": 0, "question_ids": m1},
-                {**base, "break_seconds": 0, "question_ids": [], "adaptive": {"from": 0, "threshold": 0.6, "lower": lower, "upper": upper}},
+                {**base, "break_seconds": 0, "question_ids": parts["m1"]},
+                {**base, "break_seconds": 0, "question_ids": [], "adaptive": {"from": 0, "threshold": 0.6, "lower": parts["lower"], "upper": parts["upper"]}},
             ],
-        })
+        }
+
+    forms = []
+    for form_id, parts in saved.items():
+        ids = parts["m1"] + parts["lower"] + parts["upper"]
+        missing = [i for i in ids if i not in by_id]
+        if missing:
+            raise RuntimeError(f"{form_id}: question bank items {missing[:3]} are no longer extracted")
+        pool = [q for q in pool if q["id"] not in set(ids)]
+        forms.append(form(int(form_id.rsplit("-", 1)[1]), parts))
+
+    n = max([first_number - 1] + [int(f["id"].rsplit("-", 1)[1]) for f in forms]) + 1
+    while len(pool) >= 66:
+        before = list(pool)
+        try:
+            parts = {name: module(plan) for name, plan in levels.items()}
+        except RuntimeError:
+            pool = before  # not enough of some difficulty yet; keep the rest in reserve
+            break
+        saved[f"mock-math-{n}"] = parts
+        forms.append(form(n, parts))
         n += 1
-        break  # one mock for now; the rest of the pool stays in reserve
+    BANK_MOCKS.write_text(json.dumps(saved, indent=1) + "\n")
+    print(f"Bank mocks: {len(forms)} test(s), {len(pool)} question bank items in reserve")
     return forms
 
 
