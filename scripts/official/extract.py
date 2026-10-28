@@ -1729,6 +1729,30 @@ MOCKS = {
 }
 
 
+def rank_rw_difficulty(questions: list[dict]) -> None:
+    """The practice books give no difficulty for Reading and Writing items, but
+    each module orders every question type from easier to harder. Within each
+    run of one skill, the first third is easy, the middle medium and the last
+    third hard (a lone item stays medium)."""
+    modules: dict[str, list[dict]] = {}
+    for q in questions:
+        m = re.fullmatch(r"(pt\d+-rw\d)-(\d+)", q["id"])
+        if m:
+            modules.setdefault(m[1], []).append(q)
+    for items in modules.values():
+        items.sort(key=lambda q: int(q["id"].rsplit("-", 1)[1]))
+        runs: list[list[dict]] = []
+        for q in items:
+            if runs and runs[-1][-1]["skill"] == q["skill"]:
+                runs[-1].append(q)
+            else:
+                runs.append([q])
+        for run in runs:
+            for i, q in enumerate(run):
+                position = i / (len(run) - 1) if len(run) > 1 else 0.5
+                q["difficulty"] = "easy" if position < 0.34 else "medium" if position < 0.67 else "hard"
+
+
 def mock_forms(questions: list[dict], bank: list[dict]) -> list[dict]:
     """Digital-format adaptive mocks. Module 1 is drawn from an official
     practice test; Module 2 has an easier version (more of that test plus easy
@@ -2137,6 +2161,8 @@ def main() -> None:
         questions += qs
         forms += fs
         print(f"Practice test {n}: {len(qs)} questions")
+
+    rank_rw_difficulty(questions)
 
     bank: list[dict] = []
     for name, subject in [
