@@ -1721,6 +1721,14 @@ RW_SKILL_ORDER = [
 ]
 LEVEL = {"easy": 0.2, "medium": 0.5, "hard": 0.85}
 
+# Difficulty mix of the two Module 2 versions (easy, medium, hard). The harder
+# version still has some easier items and the easier one a few hard ones, as
+# on the digital SAT.
+MODULE2_MIX = {
+    "math": {"lower": (11, 9, 2), "upper": (3, 8, 11)},
+    "english": {"lower": (14, 10, 3), "upper": (4, 9, 14)},
+}
+
 # Which book each mock draws from; no question appears in two mocks.
 MOCKS = {
     "math": [4, 5, 6],
@@ -1767,7 +1775,7 @@ def mock_forms(questions: list[dict], bank: list[dict]) -> list[dict]:
     pools = {
         (s, lvl): sorted((q for q in bank if q["subject"] == s and q["difficulty"] in lvl), key=lambda q: q["id"])
         for s in ("english", "math")
-        for lvl in (("easy", "medium"), ("hard",))
+        for lvl in (("easy",), ("medium",), ("hard",))
     }
 
     def take_bank(subject: str, levels: tuple, n: int) -> list[dict]:
@@ -1805,23 +1813,28 @@ def mock_forms(questions: list[dict], bank: list[dict]) -> list[dict]:
 
     def section(subject: str, n: int) -> tuple[list[str], dict]:
         items = book(n, subject)
+        size = 27 if subject == "english" else 22
         if subject == "english":
-            size, lower_book, upper_book, lower_bank, upper_bank = 27, 19, 17, 8, 10
             # Keep the official mix of question types in Module 1.
             items = sorted(items, key=lambda q: (RW_SKILL_ORDER.index(q["skill"]) if q["skill"] in RW_SKILL_ORDER else 99, q["id"]))
         else:
-            size, lower_book, upper_book, lower_bank, upper_bank = 22, 16, 12, 6, 10
             items = sorted(items, key=difficulty)
         m1, rest = spread(items, size)
-        rest = sorted(rest, key=difficulty)
-        if subject == "english":
-            lower = rest[:lower_book]
-            upper = rest[len(rest) - upper_book :]
-        else:
-            lower = rest[:lower_book]
-            upper = rest[-upper_book:]
-        lower = lower + take_bank(subject, ("easy", "medium"), lower_bank)
-        upper = upper + take_bank(subject, ("hard",), upper_bank)
+        # Module 2: the rest of the book at each level, shared between the two
+        # versions in proportion to what each needs, topped up from the bank.
+        lower: list[dict] = []
+        upper: list[dict] = []
+        for li, level in enumerate(("easy", "medium", "hard")):
+            want_l, want_u = MODULE2_MIX[subject]["lower"][li], MODULE2_MIX[subject]["upper"][li]
+            have = sorted((q for q in rest if q["difficulty"] == level), key=difficulty)
+            share_l = min(want_l, round(len(have) * want_l / max(1, want_l + want_u)))
+            share_u = min(want_u, len(have) - share_l)
+            share_l = min(want_l, len(have) - share_u)
+            # The easier version takes the easier end of each level.
+            lower += have[:share_l]
+            upper += have[len(have) - share_u :] if share_u else []
+            lower += take_bank(subject, (level,), want_l - share_l)
+            upper += take_bank(subject, (level,), want_u - share_u)
         assert len(m1) == size and len(lower) == size and len(upper) == size
         return ordered(subject, m1), {"from": 0, "threshold": 0.6, "lower": ordered(subject, lower), "upper": ordered(subject, upper)}
 
@@ -1903,8 +1916,8 @@ def bank_mock_forms(pool: list[dict], first_number: int) -> list[dict]:
     saved: dict[str, dict[str, list[str]]] = json.loads(BANK_MOCKS.read_text()) if BANK_MOCKS.exists() else {}
     levels = {
         "m1": {"easy": 7, "medium": 8, "hard": 7},
-        "lower": {"easy": 11, "medium": 11, "hard": 0},
-        "upper": {"easy": 0, "medium": 8, "hard": 14},
+        "lower": dict(zip(("easy", "medium", "hard"), MODULE2_MIX["math"]["lower"])),
+        "upper": dict(zip(("easy", "medium", "hard"), MODULE2_MIX["math"]["upper"])),
     }
 
     def module(plan: dict[str, int]) -> list[str]:
